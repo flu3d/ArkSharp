@@ -1,0 +1,15 @@
+{
+  "name": "com.flu3d.arksharp",
+  "displayName": "ArkSharp",
+  "description": "Yet another minimalist toolbox for Unity/C# game developers.",
+  "version": "0.4.2",
+  "unity": "2018.4",
+  "license": "MIT",
+  "author": {
+    "name": "RocWood",
+    "url": "https://github.com/rocwood/"
+  },
+  "dependencies": {
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask"
+  }
+}

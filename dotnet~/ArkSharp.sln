@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32804.467
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArkSharp.Tests", "ArkSharp.Tests.csproj", "{A8E6E102-2BF1-4B94-9EB5-DA70BB04BA85}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D4645076-9B62-4564-8CB9-42F2DB593C30} = {D4645076-9B62-4564-8CB9-42F2DB593C30}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A5670EB5-5CAC-4ACD-AC40-430043FF9708}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArkSharp", "ArkSharp.csproj", "{D4645076-9B62-4564-8CB9-42F2DB593C30}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Runtime", "Runtime", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A8E6E102-2BF1-4B94-9EB5-DA70BB04BA85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8E6E102-2BF1-4B94-9EB5-DA70BB04BA85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8E6E102-2BF1-4B94-9EB5-DA70BB04BA85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8E6E102-2BF1-4B94-9EB5-DA70BB04BA85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4645076-9B62-4564-8CB9-42F2DB593C30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4645076-9B62-4564-8CB9-42F2DB593C30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4645076-9B62-4564-8CB9-42F2DB593C30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4645076-9B62-4564-8CB9-42F2DB593C30}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A8E6E102-2BF1-4B94-9EB5-DA70BB04BA85} = {A5670EB5-5CAC-4ACD-AC40-430043FF9708}
+		{D4645076-9B62-4564-8CB9-42F2DB593C30} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {781D4C3C-2A1B-443A-93BF-0C4E30C06410}
+	EndGlobalSection
+EndGlobal
