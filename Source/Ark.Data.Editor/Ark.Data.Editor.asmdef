@@ -1,0 +1,19 @@
+{
+    "name": "Ark.Data.Editor",
+    "rootNamespace": "Ark.Data.Editor",
+    "references": [
+        "Ark.Base",
+        "Ark.Data"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
