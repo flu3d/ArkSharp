@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace ArkSharp
 {
@@ -10,6 +11,7 @@ namespace ArkSharp
 		/// <summary>
 		/// 统一使用/符号规范化路径
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string Normalize(string path)
 		{
 			if (string.IsNullOrEmpty(path))
@@ -21,6 +23,7 @@ namespace ArkSharp
 		/// <summary>
 		/// 获取全路径并进行规范化
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetFullPath(string path)
 		{
 			if (string.IsNullOrEmpty(path))
@@ -62,6 +65,7 @@ namespace ArkSharp
 				return "file:///" + path;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsURL(string path)
 		{
 			if (string.IsNullOrEmpty(path))

@@ -117,9 +117,6 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T GetValueOrDefault<T>(this IReadOnlyList<T> list, int index)
 		{
-			if (list == null)
-				return default;
-
 			if (index >= 0 && index < list.Count)
 				return list[index];
 
@@ -127,27 +124,42 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GetValueOrDefault<T>(this IReadOnlyList<T> list, int index, in T defaultVal)
+		public static T GetValueOrDefault<T>(this IReadOnlyList<T> list, int index, in T defaultValue)
 		{
-			if (list == null)
-				return defaultVal;
-
 			if (index >= 0 && index < list.Count)
 				return list[index];
 
-			return defaultVal;
+			return defaultValue;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T GetValueOrFirst<T>(this IReadOnlyList<T> list, int index)
 		{
-			if (list == null || list.Count <= 0)
+			if (list.Count <= 0)
 				return default;
 
 			if (index >= 0 && index < list.Count)
 				return list[index];
 
 			return list[0];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GetValueOrLast<T>(this IReadOnlyList<T> list, int index)
+		{
+			if (list.Count <= 0)
+				return default;
+
+			if (index >= 0 && index < list.Count)
+				return list[index];
+
+			return list[list.Count - 1];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsNullOrEmpty<T>(this IReadOnlyList<T> list)
+		{
+			return list == null || list.Count == 0;
 		}
 	}
 }

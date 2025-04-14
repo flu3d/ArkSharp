@@ -16,7 +16,7 @@ namespace ArkSharp
 
 		public struct Enumerable<T> : IEnumerable<T>
 		{
-			private readonly IEnumerator<T> enumerator;
+            private readonly IEnumerator<T> enumerator;
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			internal Enumerable(IEnumerator<T> enumerator) => this.enumerator = enumerator;

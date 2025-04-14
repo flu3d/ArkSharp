@@ -114,6 +114,9 @@ namespace ArkSharp
 #if UNITY_5_3_OR_NEWER
 			if (instance is MonoBehaviour behaviour)
 			{
+				if (!behaviour)
+					return;
+
 				var gameObj = behaviour.gameObject;
 				GameObject.DestroyImmediate(behaviour);
 

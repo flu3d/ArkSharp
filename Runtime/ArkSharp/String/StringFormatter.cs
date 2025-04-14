@@ -6,7 +6,11 @@ using System.Text;
 
 namespace ArkSharp
 {
-	public static partial class StringConvert
+	/// <summary>
+	/// 通用字符串格式化
+	/// 提供比默认object.ToString更定制化的实现
+	/// </summary>
+	public static partial class StringFormatter
 	{
 		public const string DefaultListFormatingSeparator = ",";
 		public const string DefaultDictFormatingSeparator = ":";
@@ -20,6 +24,7 @@ namespace ArkSharp
 			if (value == null)
 				return null;
 
+			// 字符串无需转换
 			var type = value.GetType();
 			if (type == typeof(string))
 				return (string)value;
@@ -28,12 +33,6 @@ namespace ArkSharp
 			var formatter = _formatters.GetValueOrDefault(type);
 			if (formatter != null)
 				return formatter(value);
-
-			// 处理枚举和bool
-			if (type == typeof(bool))
-				return ToString((bool)value);
-			if (type.IsEnum)
-				return ToString((Enum)value);
 
 			// 容器类型
 			if (type.IsArray || type.IsList())
@@ -49,35 +48,9 @@ namespace ArkSharp
 		/// bool型转字符串，默认转为1和0
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToString(bool value)
+		public static string ToString(bool val)
 		{
-			return value ? "1" : "0";
-		}
-
-		/// <summary>
-		/// 枚举类型转字符串，移除枚举类型前缀和末尾Type标记
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToString(Enum value)
-		{
-			var result = value.ToString();
-			var enumTypeName = value.GetType().Name;
-
-			// try XXXX.XXXXtext 
-			int prefixLen = enumTypeName.Length;
-			if (string.CompareOrdinal(enumTypeName, 0, result, 0, prefixLen) == 0)
-				return result.Substring(prefixLen);
-
-			// try XXXXType.XXXXtext
-			if (enumTypeName.EndsWith("Type"))
-			{
-				prefixLen -= 4;
-
-				if (string.CompareOrdinal(enumTypeName, 0, result, 0, prefixLen) == 0)
-					return result.Substring(prefixLen);
-			}
-
-			return result;
+			return val ? "1" : "0";
 		}
 
 		/// <summary>
@@ -148,15 +121,20 @@ namespace ArkSharp
 				sb.Append(ToString(kv.Value));
 				sb.Append(separator);
 			}
-		
+
 			return sb.ToString(0, sb.Length - 1);
+		}
+
+		static StringFormatter()
+		{
+			SetFormatter<bool>(ToString);
 		}
 
 		/// <summary>
 		/// 添加自定义字符串格式化
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void AddFormatter<T>(Func<T, string> func)
+		public static void SetFormatter<T>(Func<T, string> func)
 		{
 			FormaterHolder<T>.func = func;
 			_formatters[typeof(T)] = FormaterHolder<T>.ConvertToString;
@@ -166,13 +144,7 @@ namespace ArkSharp
 		{
 			public static Func<T, string> func;
 
-			public static string ConvertToString(object value)
-			{
-				if (func == null)
-					return value.ToString();
-
-				return func.Invoke((T)value);
-			}
+			public static string ConvertToString(object value) => func.Invoke((T)value);
 		}
 
 		private static readonly Dictionary<Type, Func<object, string>> _formatters = new Dictionary<Type, Func<object, string>>();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 
 namespace ArkSharp
 {
@@ -13,6 +14,7 @@ namespace ArkSharp
 	{
 		public MultiDictionary() {}
 		public MultiDictionary(int capacity) : base(capacity) {}
+		protected MultiDictionary(SerializationInfo info, StreamingContext context) : base(info, context) {}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(TKey key, TValue value)

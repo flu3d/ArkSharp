@@ -14,6 +14,12 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsNullOrWhiteSpace(this string s)
+		{
+			return string.IsNullOrWhiteSpace(s);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string EmptyToNull(this string s)
 		{
 			if (s == null || s.Length == 0)

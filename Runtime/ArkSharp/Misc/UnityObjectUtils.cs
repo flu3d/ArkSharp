@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace Ark
+namespace ArkSharp
 {
 	/// <summary>
 	/// Unity Object接口扩展

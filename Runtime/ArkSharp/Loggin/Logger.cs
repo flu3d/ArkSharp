@@ -1,160 +1,68 @@
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Runtime.CompilerServices;
-
-#if UNITY_5_3_OR_NEWER
-using UnityEngine;
-#endif
 
 namespace ArkSharp
 {
-	public interface ILogTarget
+	public interface ILogSink : IDisposable
 	{
 		void Write(LogLevel level, string message);
-		void Close();
 	}
 
-	public class Logger
+	public class Logger : IDisposable
 	{
-		public bool timePrefix { get; set; } = false;
+		/// <summary>
+		/// 默认时间戳格式，和消息间隔2个空格
+		/// </summary>
+		public const string DefaultTimeFormat = "HH:mm:ss.fff  ";
 
-		private LogLevel _level = LogLevel.Info;
-		public LogLevel level 
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _level;
-			set {
-				_level = value;
+		/// <summary>
+		/// 时间戳前缀格式
+		/// </summary>
+		public string TimeFormat { get; set; } = DefaultTimeFormat;
 
-#if UNITY_5_3_OR_NEWER
-				switch (value)
-				{
-					case LogLevel.Trace: Debug.unityLogger.filterLogType = LogType.Log; break;
-					case LogLevel.Info: Debug.unityLogger.filterLogType = LogType.Log; break;
-					case LogLevel.Warn: Debug.unityLogger.filterLogType = LogType.Warning; break;
-					case LogLevel.Error: Debug.unityLogger.filterLogType = LogType.Error; break;
-					default:
-						break;
-				}
-#endif
-			}
-		}
+		/// <summary>
+		/// 日志等级
+		/// </summary>
+		public LogLevel Level { get; set; }
 
-		private readonly object _syncObj = new object();
-
+		/// <summary>
+		/// 判断日志等级是否需要写入
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsEnabled(LogLevel level) => _level <= level;
+		public bool IsEnabled(LogLevel level) => level >= Level;
 
-		public Logger()
+		/// <summary>
+		/// 创建Logger
+		/// </summary>
+		/// <param name="asyncCapacity">异步日志队列容量，容量要求是2的幂次方，0则表示同步阻塞模式</param>
+		public Logger(int asyncCapacity)
 		{
-#if UNITY_5_3_OR_NEWER
-			Application.logMessageReceivedThreaded += UnityLogCallback;
-#endif
+			_sinkGroup = asyncCapacity > 0
+				? new AsyncLogSinkGroup(asyncCapacity)
+				: new SyncLogSinkGroup();
 		}
 
-		public void Close()
-		{
-#if UNITY_5_3_OR_NEWER
-			Application.logMessageReceivedThreaded -= UnityLogCallback;
-#endif
-			RemoveAllTargets();
-		}
+		/// <summary>
+		/// 日志持久化组
+		/// </summary>
+		public ILogSinkGroup Sink => _sinkGroup;
+		private readonly LogSinkGroup _sinkGroup;
 
-		public virtual void Write(LogLevel level, object messageObj)
+		public void Write(LogLevel level, object messageObj)
 		{
-			if (messageObj == null || this.level > level)
-				return; ;
+			if (messageObj == null || level < Level)
+				return;
 
-			var message = timePrefix 
-				? $"[{DateTime.Now:HH:mm:ss.fff}] {messageObj}"
+			var message = !string.IsNullOrEmpty(TimeFormat)
+				? DateTime.Now.ToString(TimeFormat) + messageObj.ToString()
 				: messageObj.ToString();
 
-#if UNITY_5_3_OR_NEWER
-			switch (level)
-			{
-				case LogLevel.Trace: Debug.Log(message); break;
-				case LogLevel.Info: Debug.Log(message); break;
-				case LogLevel.Warn: Debug.LogWarning(message); break;
-				case LogLevel.Error: Debug.LogError(message); break;
-				default:
-					break;
-			}
-#else
-			WriteTargets(level, message);
-#endif
+			_sinkGroup?.Write(level, message);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteTargets(LogLevel level, string message)
+		public void Dispose()
 		{
-			lock (_syncObj)
-			{
-				foreach (var target in _targets)
-					target?.Write(level, message);
-			}
+			_sinkGroup.Dispose();
 		}
-
-#if UNITY_5_3_OR_NEWER
-		private void UnityLogCallback(string message, string stackTrace, LogType type)
-		{
-			switch (type)
-			{
-				case LogType.Error:
-				case LogType.Assert:
-				case LogType.Exception:
-					if (string.IsNullOrEmpty(stackTrace))
-						WriteTargets(LogLevel.Error, message);
-					else
-						WriteTargets(LogLevel.Error, $"{message}\n{stackTrace}");
-					break;
-				case LogType.Warning:
-					WriteTargets(LogLevel.Warn, message);
-					break;
-				case LogType.Log:
-					WriteTargets(LogLevel.Info, message);
-					break;
-				default:
-					break;
-			}
-		}
-#endif
-
-#region LogTargets
-		protected readonly List<ILogTarget> _targets = new List<ILogTarget>();
-
-		public void AddTarget(ILogTarget target)
-		{
-			if (target == null)
-				return;
-
-			lock (_syncObj)
-			{
-				_targets.AddUnique(target);
-			}
-		}
-
-		public void RemoveTarget(ILogTarget target)
-		{
-			if (target == null)
-				return;
-
-			lock (_syncObj)
-			{
-				target.Close();
-				_targets.Remove(target);
-			}
-		}
-
-		public void RemoveAllTargets()
-		{
-			lock (_syncObj)
-			{
-				foreach (var target in _targets)
-					target?.Close();
-
-				_targets.Clear();
-			}
-		}
-#endregion
 	}
 }

@@ -101,7 +101,11 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
+#if true //NET_STANDARD
 			_queue.Clear();
+#else
+			while (_queue.TryDequeue(out var e));
+#endif
 		}
 
 		public static EventQueue Default { get; } = new EventQueue(EventDispatcher.Default);

@@ -7,9 +7,18 @@ using System.Text;
 
 namespace ArkSharp
 {
-	public class ConsoleLogTarget : ILogTarget
+	public static partial class LogSinkExtensions
 	{
-		public ConsoleLogTarget(int codePage = 0)
+		public static ILogSinkGroup ToConsole(this ILogSinkGroup sinkGroup, int codePage = 0)
+		{
+			sinkGroup.Add(new LogSinkConsole(codePage));
+			return sinkGroup;
+		}
+	}
+
+	public class LogSinkConsole : ILogSink
+	{
+		public LogSinkConsole(int codePage = 0)
 		{
 			try
 			{
@@ -18,7 +27,7 @@ namespace ArkSharp
 				const int ATTACH_PARENT_PROCESS = -1;
 				if (!AttachConsole(ATTACH_PARENT_PROCESS))
 					AllocConsole();
-				
+
 				_oldOutput = Console.Out;
 
 				_newOutput = new StreamWriter(Console.OpenStandardOutput(), Encoding.GetEncoding(codePage));
@@ -34,37 +43,40 @@ namespace ArkSharp
 			}
 		}
 
-		public void Close()
+		public void Dispose()
 		{
-			lock (_syncObj)
+			try
 			{
-				try
-				{
-					if (_oldOutput != null)
-						Console.SetOut(_oldOutput);
+				if (_oldOutput != null)
+					Console.SetOut(_oldOutput);
 
-					FreeConsole();
-				}
-				catch (Exception)
-				{
-					// ignore errors
-				}
-
-				_oldOutput = null;
-				_newOutput = null;
+				FreeConsole();
 			}
+			catch (Exception)
+			{
+				// ignore errors
+			}
+
+			_oldOutput = null;
+			_newOutput = null;
 		}
 
 		public void Write(LogLevel level, string message)
 		{
-			lock (_syncObj)
+			try
 			{
 				switch (level)
 				{
 					case LogLevel.Trace:
-					case LogLevel.Info: Console.ForegroundColor = ConsoleColor.Gray; break;
-					case LogLevel.Warn: Console.ForegroundColor = ConsoleColor.Yellow; break;
-					case LogLevel.Error: Console.ForegroundColor = ConsoleColor.Red; break;
+					case LogLevel.Info:
+						Console.ForegroundColor = ConsoleColor.Gray;
+						break;
+					case LogLevel.Warn:
+						Console.ForegroundColor = ConsoleColor.Yellow;
+						break;
+					case LogLevel.Error:
+						Console.ForegroundColor = ConsoleColor.Red;
+						break;
 					default:
 						return;
 				}
@@ -72,11 +84,14 @@ namespace ArkSharp
 				Console.WriteLine(message);
 				Console.ResetColor();
 			}
+			catch (Exception)
+			{
+				// ignore errors
+			}
 		}
 
 		private TextWriter _oldOutput = null;
 		private StreamWriter _newOutput = null;
-		private readonly object _syncObj = new object();
 
 		private static void SendWindowToBack(IntPtr window, IntPtr oldWindow)
 		{

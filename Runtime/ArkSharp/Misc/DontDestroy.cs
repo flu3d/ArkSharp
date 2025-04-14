@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-namespace Ark
+namespace ArkSharp
 {
 	public class DontDestroy : MonoBehaviour
 	{

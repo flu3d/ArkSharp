@@ -123,13 +123,22 @@ namespace ArkSharp
 			if (stream == null)
 				return 0;
 
-			const int bufferSize = 512;
+			const int bufferSize = 256;
+
+#if true //NET_STANDARD
 			Span<byte> buffer = stackalloc byte[bufferSize];
+#else
+			var buffer = new byte[bufferSize];
+#endif
 
 			uint crc = 0xffffffffu;
 			for (;;)
 			{
+#if true //NET_STANDARD
 				int readCount = stream.Read(buffer);
+#else
+				int readCount = stream.Read(buffer, 0, bufferSize);
+#endif
 				if (readCount <= 0)
 					break;
 

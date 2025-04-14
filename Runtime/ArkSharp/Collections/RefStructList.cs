@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Game.Battle
+namespace ArkSharp
 {
 	/// <summary>
 	/// 结构体变长线性容器，比普通List增加ref引用访问支持
@@ -10,7 +10,6 @@ namespace Game.Battle
 	public class RefStructList<T> where T : struct
 	{
 		private const int DefaultCapacity = 64;
-		private const int MaxCapacity = 0x7FEFFFFF;
 
 		private T[] _items;
 		private int _size;
@@ -23,8 +22,8 @@ namespace Game.Battle
 		{
 			if (capacity < 0)
 				capacity = 0;
-			else if ((uint)capacity > MaxCapacity)
-				capacity = MaxCapacity;
+			else if ((uint)capacity > ArrayHelper.MaxLength)
+				capacity = ArrayHelper.MaxLength;
 
 			_items = new T[capacity];
 			_size = 0;
@@ -128,26 +127,7 @@ namespace Game.Battle
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void EnsureCapacity(int count)
 		{
-			int capacity = _items.Length;
-			if (count <= capacity)
-				return;
-
-			while (count > capacity)
-			{
-				if (capacity <= 0)
-					capacity = DefaultCapacity;
-				else
-					capacity *= 2;
-
-				if ((uint)capacity > MaxCapacity)
-				{
-					capacity = MaxCapacity;
-					break;
-				}
-			}
-
-			if (capacity > _items.Length)
-				Array.Resize(ref _items, capacity);
+			ArrayHelper.EnsureCapacity(ref _items, count, DefaultCapacity);
 		}
 	}
 }
