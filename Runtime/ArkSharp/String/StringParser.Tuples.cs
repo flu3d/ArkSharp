@@ -6,6 +6,26 @@ namespace ArkSharp
 	public static partial class StringParser
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void To<T1>(this string text, out T1 p1)
+			=> To(text.AsSpan(), out p1);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void To<T1, T2>(this string text, out T1 p1, out T2 p2)
+			=> To(text.AsSpan(), out p1, out p2);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void To<T1, T2, T3>(this string text, out T1 p1, out T2 p2, out T3 p3)
+			=> To(text.AsSpan(), out p1, out p2, out p3);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void To<T1, T2, T3, T4>(this string text, out T1 p1, out T2 p2, out T3 p3, out T4 p4)
+			=> To(text.AsSpan(), out p1, out p2, out p3, out p4);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void To<T1, T2, T3, T4, T5>(this string text, out T1 p1, out T2 p2, out T3 p3, out T4 p4, out T5 p5)
+			=> To(text.AsSpan(), out p1, out p2, out p3, out p4, out p5);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void To<T1>(this ReadOnlySpan<char> text, out T1 p1)
 		{
 			p1 = To<T1>(text);

@@ -11,15 +11,42 @@ namespace ArkSharp
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T To<T>(this string text)
-		{
-			if (ParserHolder<T>.func != null)
-			{
-				ParserHolder<T>.func(text, out var result);
-				return result;
-			}
+			=> To<T>(text.AsSpan());
 
-			return (T)text.To(typeof(T));
-		}
+		/// <summary>
+		/// 字符串转数组，如果result为空或长度不匹配则新建
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void To<T>(this string text, ref T[] result, char[] separator = null)
+			=> To(text.AsSpan(), ref result, separator);
+
+		/// <summary>
+		/// 字符串转List，如果result为空则新建
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void To<T>(this string text, ref List<T> result, char[] separator = null)
+			=> To(text.AsSpan(), ref result, separator);
+
+		/// <summary>
+		/// 字符串转Dictionary，如果result为空则新建
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void To<K, V>(this string text, ref Dictionary<K, V> result, char[] separator = null, char[] separatorKV = null)
+			=> To(text.AsSpan(), ref result, separator, separatorKV);
+
+		/// <summary>
+		/// 字符串转SortedDictionary，如果result为空则新建
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void To<K, V>(this string text, ref SortedDictionary<K, V> result, char[] separator = null, char[] separatorKV = null)
+		   => To(text.AsSpan(), ref result, separator, separatorKV);
+
+		/// <summary>
+		/// 字符串转MultiDictionary，如果result为空则新建
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void To<K, V>(this string text, ref Dictionary<K, List<V>> result, char[] separator = null, char[] separatorKV = null)
+			=> To(text.AsSpan(), ref result, separator, separatorKV);
 
 		/// <summary>
 		/// 通用类型转换，支持容器类型，如果转换失败则返回默认值
@@ -102,10 +129,10 @@ namespace ArkSharp
 		/// 字符串转MultiDictionary，如果result为空则新建
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void To<K, V>(this ReadOnlySpan<char> text, ref MultiDictionary<K, V> result, char[] separator = null, char[] separatorKV = null)
+		public static void To<K, V>(this ReadOnlySpan<char> text, ref Dictionary<K, List<V>> result, char[] separator = null, char[] separatorKV = null)
 		{
 			if (result == null)
-				result = new MultiDictionary<K, V>();
+				result = new Dictionary<K, List<V>>();
 			else
 				result.Clear();
 

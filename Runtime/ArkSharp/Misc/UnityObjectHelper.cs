@@ -9,7 +9,7 @@ namespace ArkSharp
 	/// <summary>
 	/// Unity Object接口扩展
 	/// </summary>
-	public static class UnityObjectUtils
+	public static class UnityObjectHelper
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T GetOrAddComponent<T>(this GameObject obj) where T : Component
@@ -137,7 +137,7 @@ namespace ArkSharp
 		private delegate System.IntPtr GetCachePtrDelagate(Object obj);
 		private static readonly GetCachePtrDelagate unityObjectGetCachedPtr;
 
-		static UnityObjectUtils()
+		static UnityObjectHelper()
 		{
 			var methodInfo = typeof(Object).GetMethod("GetCachedPtr", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 			if (methodInfo != null)

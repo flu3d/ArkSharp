@@ -125,26 +125,6 @@ namespace ArkSharp
 			return 0;
 		}
 
-		public void Serialize(Stream stream)
-		{
-			var w = new BinaryWriter(stream);
-
-			w.WriteUIntV(Major);
-			w.WriteUIntV(Minor);
-			w.WriteUIntV(Revised);
-			w.WriteUIntV(Timestamp);
-		}
-
-		public void Deserialize(Stream stream)
-		{
-			var r = new BinaryReader(stream);
-
-			Major = (ushort)r.ReadUIntV();
-			Minor = (ushort)r.ReadUIntV();
-			Revised = (ushort)r.ReadUIntV();
-			Timestamp = r.ReadUIntV();
-		}
-
 		public static readonly Version Empty = new Version();
 		public const string TimestampFormat = "yyyyMMddHHmmss";
 	}

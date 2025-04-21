@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace ArkSharp
 {
-	public static class IReadOnlyListUtils
+	public static class ReadOnlyListHelper
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Contains<T>(this IReadOnlyList<T> list, T value)

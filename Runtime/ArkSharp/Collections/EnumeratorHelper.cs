@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace ArkSharp
 {
-	public static class EnumeratorUtils
+	public static class EnumeratorHelper
 	{
 		/// 让IEnumerator直接支持foreach语法糖
 		/// Make 'foreach' works directly with IEnumerator
@@ -16,7 +16,7 @@ namespace ArkSharp
 
 		public struct Enumerable<T> : IEnumerable<T>
 		{
-            private readonly IEnumerator<T> enumerator;
+			private readonly IEnumerator<T> enumerator;
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			internal Enumerable(IEnumerator<T> enumerator) => this.enumerator = enumerator;

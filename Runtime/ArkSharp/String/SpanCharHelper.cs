@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace ArkSharp
 {
-	public static class SpanCharUtils
+	public static class SpanCharHelper
 	{
 		/// <summary>
 		/// 分割Span字符串，默认返回迭代器而不是数组

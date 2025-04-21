@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace ArkSharp
 {
-	public static class IDictionaryUtils
+	public static class DictionaryHelper
 	{
 #if false //NET_STANDARD
 		// Using System.Collections.Generic.CollectionExtensions.GetValueOrDefault() after .NETStandard 2.1
@@ -51,10 +51,10 @@ namespace ArkSharp
 			tempKeyList.Clear();
 		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNullOrEmpty<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dict)
-        {
-            return dict == null || dict.Count == 0;
-        }
-    }
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsNullOrEmpty<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dict)
+		{
+			return dict == null || dict.Count == 0;
+		}
+	}
 }

@@ -10,14 +10,7 @@ namespace ArkSharp
 		/// </summary>
 		public static string ToJson(this object obj, bool indented = false)
 		{
-			var settings = new JsonSerializerSettings
-			{
-				Formatting = indented ? Formatting.Indented : Formatting.None,
-				DateFormatString = "yyyyMMdd HH:mm:ss",
-				ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-				//ContractResolver = new JsonPropertyContractResolver(ignoreProperties);
-			};
-
+			var settings = indented ? _jsonSettingsIdented : _jsonSettingsDefault;
 			return JsonConvert.SerializeObject(obj, settings);
 		}
 
@@ -42,5 +35,21 @@ namespace ArkSharp
 
 			return JsonConvert.DeserializeObject(json, type);
 		}
+
+		private static readonly JsonSerializerSettings _jsonSettingsDefault = new()
+		{
+			Formatting = Formatting.None,
+			DateFormatString = "yyyyMMdd HH:mm:ss",
+			ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+			//ContractResolver = new JsonPropertyContractResolver(ignoreProperties);
+		};
+
+		private static readonly JsonSerializerSettings _jsonSettingsIdented = new()
+		{
+			Formatting = Formatting.Indented,
+			DateFormatString = "yyyyMMdd HH:mm:ss",
+			ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+			//ContractResolver = new JsonPropertyContractResolver(ignoreProperties);
+		};
 	}
 }

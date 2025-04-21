@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace ArkSharp
 {
-	public static class IListUtils
+	public static class ListHelper
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void AddUnique<T>(this IList<T> list, T value, Func<T, T, bool> comparer)

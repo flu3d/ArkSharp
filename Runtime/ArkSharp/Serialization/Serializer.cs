@@ -1,33 +1,45 @@
 ﻿using System;
-using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
+using UnityEngine.UIElements.Experimental;
 
 namespace ArkSharp
 {
+	[Flags]
+	public enum SerializeOptions : byte
+	{
+		/// <summary>字符串和容器长度启用变长字节数</summary>
+		VarLen = 0,
+		/// <summary>字符串和容器长度使用2字节定长</summary>
+		FixedLen2 = 2,
+		/// <summary>字符串和容器长度使用4字节定长</summary>
+		FixedLen4 = 4,
+
+		/// <summary>启用变长数值类型</summary>
+		VarInt = 0x80,
+	}
+
 	/// <summary>
-	/// 快速反序列化器（栈上分配，用后即销毁）
+	/// 快速二进制反序列化器（栈上分配，用后即销毁）
 	/// 适用于快速序列化到一段内存buffer
 	///
-	/// var ds = new Serializer(buffer); // 输出到外部分配的定长缓冲区
-	/// 或 var ds = new Serializer(1024);   // 输出到内部创建的变长缓冲区
+	/// var bs = new Serializer(buffer);  // 输出到外部分配的定长缓冲区
+	/// 或 var bs = new Serializer(1024);  // 输出到内部创建的可变长缓冲区
 	/// 
-	/// ds.Write(100);
-	/// ds.Write(-1.0f);
-	/// ds.Write("hello");
+	/// bs.Write(100);
+	/// bs.Write(-1.0f);
+	/// bs.WriteString("hello");
+	/// bs.WriteInt64V(20250415);
 	///
-	/// var result = ds.GetResult(); // 获取序列化
+	/// var result = ds.GetResult();  // 获取序列化结果
 	/// </summary>
-	public ref struct Serializer
+	public ref partial struct Serializer
 	{
-		/// <summary>
-		/// 是否按大端序进行序列化
-		/// </summary>
-		public static bool UseBigEndian = false;
+		// 默认开启变长数值，字符串和列表长度固定2字节
+		public const SerializeOptions DefaultOptions = SerializeOptions.VarInt | SerializeOptions.FixedLen2;
 
-		public const int DefaultCapacity = 64;
-		private const int MaxArrayPoolRentalSize = 64 * 1024;
+		internal const int DefaultCapacity = 64;
+		internal const int MaxArrayPoolRentalSize = 64 * 1024;
 
 		private Span<byte> _buffer;
 		private int _position;
@@ -35,30 +47,31 @@ namespace ArkSharp
 		// 可扩展长度的buffer，
 		private byte[] _xbuffer;
 
+		internal readonly SerializeOptions options;
+
 		/// <summary>
 		/// 序列化到外部传入的定长缓冲区
 		/// </summary>
-		public Serializer(Span<byte> buffer)
+		public Serializer(Span<byte> buffer, SerializeOptions options = DefaultOptions)
 		{
 			_xbuffer = null;
 			_buffer = buffer;
 			_position = 0;
+			this.options = options;
 		}
 
 		/// <summary>
 		/// 序列化到外部传入的定长缓冲区
 		/// </summary>
-		public Serializer(byte[] buffer, int offset = 0) : this(buffer.AsSpan(offset)) { }
-
-		/// <summary>
-		/// 序列化到外部传入的定长缓冲区
-		/// </summary>
-		public Serializer(byte[] buffer, int offset, int length) : this(buffer.AsSpan(offset, length)) { }
+		public Serializer(byte[] buffer, int offset = 0, SerializeOptions options = DefaultOptions)
+			: this(buffer.AsSpan(offset), options) { }
+		public Serializer(byte[] buffer, int offset, int length, SerializeOptions options = DefaultOptions)
+			: this(buffer.AsSpan(offset, length), options) { }
 
 		/// <summary>
 		/// 序列化到内部分配的变长缓冲区
 		/// </summary>
-		public Serializer(int capacity)
+		public Serializer(int capacity, SerializeOptions options = DefaultOptions)
 		{
 			if (capacity <= 0)
 				capacity = DefaultCapacity;
@@ -68,6 +81,8 @@ namespace ArkSharp
 			_xbuffer = new byte[capacity];
 			_buffer = _xbuffer;
 			_position = 0;
+			_position = 0;
+			this.options = options;
 		}
 
 		public int Position => _position;
@@ -79,10 +94,78 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ReadOnlySpan<byte> GetResult() => _buffer.Slice(0, _position);
 
-		/// <summary>
-		/// 写入非托管数据(数值、枚举)
-		/// </summary>
-		public void Write<T>(T value) where T : unmanaged
+
+		#region 数值类型写入(自动判定是否变长)
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write(bool value) => WriteRaw((byte)(value ? 1 : 0)); // 不需要变长支持
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write(float value) => WriteRaw(value); // 不需要变长支持
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write(double value) => WriteRaw(value); // 不需要变长支持
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write<T>(T value) where T : unmanaged, Enum
+		{
+			if (options.HasFlag(SerializeOptions.VarInt)) 
+				WriteVarIntZg((int)(ValueType)value); // 只支持Enum:int
+			else
+				WriteRaw(value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write(short value)
+		{
+			if (options.HasFlag(SerializeOptions.VarInt))
+				WriteVarIntZg(value);
+			else
+				WriteRaw(value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write(ushort value)
+		{
+			if (options.HasFlag(SerializeOptions.VarInt))
+				WriteVarIntZg(value);
+			else
+				WriteRaw(value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write(int value)
+		{
+			if (options.HasFlag(SerializeOptions.VarInt))
+				WriteVarIntZg(value);
+			else
+				WriteRaw(value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write(uint value)
+		{
+			if (options.HasFlag(SerializeOptions.VarInt))
+				WriteVarIntZg(value);
+			else
+				WriteRaw(value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write(long value)
+		{
+			if (options.HasFlag(SerializeOptions.VarInt))
+				WriteVarIntZg(value);
+			else
+				WriteRaw(value);
+		}
+
+		#endregion
+
+		#region 按原始内存排布写入数据流
+
+		/// <summary>按原始内存排布写入非托管数据(数值、枚举)</summary>
+		public void WriteRaw<T>(T value) where T : unmanaged
 		{
 			int count = UnsafeHelper.SizeOf<T>();
 			int newPos = _position + count;
@@ -94,15 +177,11 @@ namespace ArkSharp
 			var output = _buffer.Slice(_position, count);
 			MemoryMarshal.Write(output, ref value);
 
-			// 默认为小端序，如果需要序列化为大端序则需要做逆序
-			if (Serializer.UseBigEndian && count > 1)
-				output.Reverse();
-
 			_position = newPos;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Write(byte value)
+		public void WriteRaw(byte value)
 		{
 			int newPos = _position + 1;
 			if (!EnsureCapacity(newPos))
@@ -112,114 +191,20 @@ namespace ArkSharp
 			_position = newPos;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Write(bool value) => Write((byte)(value ? 1 : 0));
-
-		/// <summary>
-		/// 写入字符串：长度(7bit变长)+utf8字节流
-		/// </summary>
-		public void WriteString(string value)
-		{
-			if (string.IsNullOrEmpty(value))
-			{
-				Write((byte)0);
-				return;
-			}
-
-			var encoding = Encoding.UTF8;
-
-			// 参考BinaryWriter代码实现
-			// https://github.com/dotnet/runtime/blob/1d1bf92fcf43aa6981804dc53c5174445069c9e4/src/libraries/System.Private.CoreLib/src/System/IO/BinaryWriter.cs#L348C13-L382C10
-
-			if (value.Length <= 127 / 3)
-			{
-				unsafe
-				{
-					// Max expansion: each char -> 3 bytes, so 127 bytes max of data, +1 for length prefix
-					var ptr = stackalloc byte[128];
-					var input = new Span<byte>(ptr, 128);
-
-					int count = encoding.GetBytes(value, input.Slice(1));
-					input[0] = (byte)count; // skip WriteVarIntImpl((ulong)count);
-
-					// 不可直接用 Span<byte> input = stackalloc byte[128];
-					// 会导致WriteBytes(input)编译错误CS8350，或unsafe编译警告
-					WriteBytes(input.Slice(0, count + 1));
-				}
-			}
-			else if (value.Length <= MaxArrayPoolRentalSize / 3)
-			{
-				var input = ArrayPool<byte>.Shared.Rent(value.Length * 3); // max expansion: each char -> 3 bytes
-				int count = encoding.GetBytes(value, input);
-
-				WriteVarIntImpl((ulong)count);
-				WriteBytes(input, 0, count);
-
-				ArrayPool<byte>.Shared.Return(input);
-			}
-			else
-			{
-				var input = encoding.GetBytes(value);
-				int count = input.Length;
-
-				WriteVarIntImpl((ulong)count);
-				WriteBytes(input, 0, count);
-			}
-		}
-
-		/// <summary>
-		/// 写入字符串：指定固定2字节长度+utf8字节流
-		/// </summary>
-		public void WriteStringLen2(string value)
-		{
-			// TODO
-		}
-
-		/// <summary>
-		/// 写入变长整数(ZigZag编码)，只支持小端序列
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void WriteInt64V(long val) => WriteVarIntImpl(ZigZagHelper.Encode(val));
-
-		/// <summary>
-		/// 写入变长非负整数，只支持小端序列
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void WriteUInt64V(ulong val) => WriteVarIntImpl(val);
-
-		private void WriteVarIntImpl(ulong val)
-		{
-			unsafe
-			{
-				var ptr = stackalloc byte[10];
-				var input = new Span<byte>(ptr, 10);
-
-				int count = 0;
-				while (val >= 0x80)
-				{
-					input[count++] = (byte)(val | 0x80);
-					val >>= 7;
-				}
-				input[count++] = (byte)val;
-
-				WriteBytes(input.Slice(0, count));
-			}
-		}
-
 		/// <summary>
 		/// 写入字节流，不附加任何额外信息
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int WriteBytes(byte[] input, int offset, int count) => WriteBytes(input.AsSpan(offset, count));
+		public void WriteRaw(byte[] input, int offset, int count) => WriteRaw(input.AsSpan(offset, count));
 
 		/// <summary>
 		/// 写入字节流，不附加任何额外信息
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int WriteBytes(ReadOnlySpan<byte> input)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]  
+		public void WriteRaw(ReadOnlySpan<byte> input)
 		{
 			if (input.IsEmpty)
-				return 0;
+				return;
 
 			int count = input.Length;
 			int newPos = _position + count;
@@ -231,7 +216,6 @@ namespace ArkSharp
 			input.CopyTo(output);
 
 			_position = newPos;
-			return count;
 		}
 
 		/// <summary>
@@ -254,5 +238,7 @@ namespace ArkSharp
 			_buffer = _xbuffer;
 			return true;
 		}
+
+		#endregion
 	}
 }

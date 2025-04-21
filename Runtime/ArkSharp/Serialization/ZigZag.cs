@@ -1,11 +1,10 @@
 ﻿namespace ArkSharp
 {
 	/// <summary>
-	/// ZigZag编码转换整数和非负整数
-	/// 让绝对值小的负数在进行变长编码时长度缩短
-	/// 仅支持小端序
+	/// ZigZag编码转换整数和非负整数（仅支持小端序）
+	/// 目的是让绝对值小的负数在进行变长编码时长度缩短
 	/// </summary>
-	public static class ZigZagHelper
+	public static class ZigZag
 	{
 		public static ulong Encode(long value) => (ulong)((value << 1) ^ (value >> 63));
 		public static long Decode(ulong value) => (long)(value >> 1) ^ -((long)value & 1);

@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace ArkSharp
 {
-	public static class StringUtils
+	public static class StringHelper
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullOrEmpty(this string s)
