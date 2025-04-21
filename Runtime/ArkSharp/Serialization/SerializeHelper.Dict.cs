@@ -4,7 +4,7 @@ namespace ArkSharp
 {
 	public static partial class SerializeHelper
 	{
-		public static void WriteDict(this Serializer s, IReadOnlyDictionary<int, int> dict)
+		public static void WriteDict(ref this Serializer s, IReadOnlyDictionary<int, int> dict)
 		{
 			int count = (dict != null) ? dict.Count : 0;
 			s.WriteLength(count);
@@ -16,7 +16,7 @@ namespace ArkSharp
 			}
 		}
 
-		public static void WriteDict(this Serializer s, IReadOnlyDictionary<int, string> dict)
+		public static void WriteDict(ref this Serializer s, IReadOnlyDictionary<int, string> dict)
 		{
 			int count = (dict != null) ? dict.Count : 0;
 			s.WriteLength(count);
@@ -28,7 +28,7 @@ namespace ArkSharp
 			}
 		}
 
-		public static void WriteDict<T>(this Serializer s, IReadOnlyDictionary<int, T> dict) where T : class, ISerializable
+		public static void WriteDict<T>(ref this Serializer s, IReadOnlyDictionary<int, T> dict) where T : class, ISerializable
 		{
 			int count = (dict != null) ? dict.Count : 0;
 			s.WriteLength(count);
@@ -40,7 +40,7 @@ namespace ArkSharp
 			}
 		}
 
-		public static void WriteDict(this Serializer s, IReadOnlyDictionary<string, int> dict)
+		public static void WriteDict(ref this Serializer s, IReadOnlyDictionary<string, int> dict)
 		{
 			int count = (dict != null) ? dict.Count : 0;
 			s.WriteLength(count);
@@ -52,7 +52,7 @@ namespace ArkSharp
 			}
 		}
 
-		public static void WriteDict(this Serializer s, IReadOnlyDictionary<string, string> dict)
+		public static void WriteDict(ref this Serializer s, IReadOnlyDictionary<string, string> dict)
 		{
 			int count = (dict != null) ? dict.Count : 0;
 			s.WriteLength(count);
@@ -64,7 +64,7 @@ namespace ArkSharp
 			}
 		}
 
-		public static void WriteDict<T>(this Serializer s, IReadOnlyDictionary<string, T> dict) where T : class, ISerializable
+		public static void WriteDict<T>(ref this Serializer s, IReadOnlyDictionary<string, T> dict) where T : class, ISerializable
 		{
 			int count = (dict != null) ? dict.Count : 0;
 			s.WriteLength(count);
@@ -77,7 +77,7 @@ namespace ArkSharp
 		}
 
 
-		public static void ReadDict(this Deserializer s, out IDictionary<int, int> dict)
+		public static void ReadDict(ref this Deserializer s, out Dictionary<int, int> dict)
 		{
 			dict = null;
 
@@ -94,7 +94,7 @@ namespace ArkSharp
 			}
 		}
 
-		public static void ReadDict(this Deserializer s, IDictionary<int, string> dict)
+		public static void ReadDict(ref this Deserializer s, out Dictionary<int, string> dict)
 		{
 			dict = null;
 
@@ -111,7 +111,7 @@ namespace ArkSharp
 			}
 		}
 
-		public static void ReadDict<T>(this Deserializer s, IDictionary<int, T> dict) where T : class, IDeserializable, new()
+		public static void ReadDict<T>(ref this Deserializer s, out Dictionary<int, T> dict) where T : class, IDeserializable, new()
 		{
 			dict = null;
 
@@ -128,7 +128,7 @@ namespace ArkSharp
 			}
 		}
 
-		public static void ReadDict(this Deserializer s, IDictionary<string, int> dict)
+		public static void ReadDict(ref this Deserializer s, out Dictionary<string, int> dict)
 		{
 			dict = null;
 
@@ -145,7 +145,7 @@ namespace ArkSharp
 			}
 		}
 
-		public static void ReadDict(this Deserializer s, IDictionary<string, string> dict)
+		public static void ReadDict(ref this Deserializer s, out Dictionary<string, string> dict)
 		{
 			dict = null;
 
@@ -162,7 +162,7 @@ namespace ArkSharp
 			}
 		}
 
-		public static void ReadDict<T>(this Deserializer s, IDictionary<string, T> dict) where T : class, IDeserializable, new()
+		public static void ReadDict<T>(ref this Deserializer s, out Dictionary<string, T> dict) where T : class, IDeserializable, new()
 		{
 			dict = null;
 

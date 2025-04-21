@@ -201,6 +201,16 @@ namespace ArkSharp
 		#region 程序集和类型遍历相关接口
 
 		/// <summary>
+		/// 跨程序集查找指定类型
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Type FindType(string fullName, bool ignoreCase = false)
+		{
+			return GetAllTypes().FirstOrDefault(t =>
+					string.Compare(t.FullName, fullName, ignoreCase) == 0);
+		}
+
+		/// <summary>
 		/// 检查是否用户程序集
 		/// (简单过滤是否在SystemAssemblyPrefixList内)
 		/// </summary>

@@ -21,7 +21,7 @@
 		/// <summary>
 		/// 写入可序列化对象。如果对象为null则写入首字符0，否则写入1再调用对象的序列化
 		/// </summary>
-		public static void WriteObject(this Serializer s, ISerializable obj)
+		public static void WriteObject(ref this Serializer s, ISerializable obj)
 		{
 			if (obj == null)
 			{
@@ -36,7 +36,7 @@
 		/// <summary>
 		/// 读取可序列化对象。读取首字符为0则返回null，然后再调用对象的反序列化
 		/// </summary>
-		public static void ReadObject<T>(this Deserializer s, out T result) where T : class, IDeserializable, new()
+		public static void ReadObject<T>(ref this Deserializer s, out T result) where T : class, IDeserializable, new()
 		{
 			result = null;
 

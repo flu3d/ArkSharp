@@ -6,7 +6,7 @@ namespace ArkSharp
 	public static partial class SerializeHelper
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write(this Serializer s, bool? val)
+		public static void Write(ref this Serializer s, bool? val)
 		{
 			if (val.HasValue)
 			{
@@ -20,7 +20,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write(this Serializer s, float? val)
+		public static void Write(ref this Serializer s, float? val)
 		{
 			if (val.HasValue)
 			{
@@ -34,7 +34,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write(this Serializer s, double? val)
+		public static void Write(ref this Serializer s, double? val)
 		{
 			if (val.HasValue)
 			{
@@ -48,7 +48,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write<T>(this Serializer s, T? val) where T : unmanaged, Enum
+		public static void Write<T>(ref this Serializer s, T? val) where T : unmanaged, Enum
 		{
 			if (val.HasValue)
 			{
@@ -62,7 +62,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write(this Serializer s, short? val)
+		public static void Write(ref this Serializer s, short? val)
 		{
 			if (val.HasValue)
 			{
@@ -76,7 +76,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write(this Serializer s, ushort? val)
+		public static void Write(ref this Serializer s, ushort? val)
 		{
 			if (val.HasValue)
 			{
@@ -90,7 +90,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write(this Serializer s, int? val)
+		public static void Write(ref this Serializer s, int? val)
 		{
 			if (val.HasValue)
 			{
@@ -104,7 +104,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write(this Serializer s, uint? val)
+		public static void Write(ref this Serializer s, uint? val)
 		{
 			if (val.HasValue)
 			{
@@ -118,7 +118,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write(this Serializer s, long? val)
+		public static void Write(ref this Serializer s, long? val)
 		{
 			if (val.HasValue)
 			{
@@ -132,7 +132,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Read(this Deserializer s, out bool? result)
+		public static void Read(ref this Deserializer s, out bool? result)
 		{
 			var hasValue = s.ReadBool();
 			if (hasValue)
@@ -142,7 +142,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Read(this Deserializer s, out float? result)
+		public static void Read(ref this Deserializer s, out float? result)
 		{
 			var hasValue = s.ReadBool();
 			if (hasValue)
@@ -155,7 +155,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Read(this Deserializer s, out double? result)
+		public static void Read(ref this Deserializer s, out double? result)
 		{
 			var hasValue = s.ReadBool();
 			if (hasValue)
@@ -168,7 +168,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Read<T>(this Deserializer s, out T? result) where T : unmanaged, Enum
+		public static void Read<T>(ref this Deserializer s, out T? result) where T : unmanaged, Enum
 		{
 			var hasValue = s.ReadBool();
 			if (hasValue)
@@ -181,7 +181,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Read(this Deserializer s, out short? result)
+		public static void Read(ref this Deserializer s, out short? result)
 		{
 			var hasValue = s.ReadBool();
 			if (hasValue)
@@ -194,7 +194,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Read(this Deserializer s, out ushort? result)
+		public static void Read(ref this Deserializer s, out ushort? result)
 		{
 			var hasValue = s.ReadBool();
 			if (hasValue)
@@ -207,7 +207,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Read(this Deserializer s, out int? result)
+		public static void Read(ref this Deserializer s, out int? result)
 		{
 			var hasValue = s.ReadBool();
 			if (hasValue)
@@ -220,7 +220,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Read(this Deserializer s, out uint? result)
+		public static void Read(ref this Deserializer s, out uint? result)
 		{
 			var hasValue = s.ReadBool();
 			if (hasValue)
@@ -233,7 +233,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Read(this Deserializer s, out long? result)
+		public static void Read(ref this Deserializer s, out long? result)
 		{
 			var hasValue = s.ReadBool();
 			if (hasValue)
