@@ -1,6 +1,6 @@
 namespace ArkSharp.Test
 {
-	class TestEventData
+	public class TestEventData
 	{
 		public int iVal = 0;
 		public string sVal = "";
