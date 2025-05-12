@@ -6,8 +6,13 @@ namespace ArkSharp
 	{
 		public static void WriteDict(ref this Serializer s, IReadOnlyDictionary<int, int> dict)
 		{
-			int count = (dict != null) ? dict.Count : 0;
-			s.WriteLength(count);
+			if (dict == null)
+			{
+				s.WriteLength(0);
+				return;
+			}
+
+			s.WriteLength(dict.Count);
 
 			foreach (var kv in dict)
 			{
@@ -18,8 +23,13 @@ namespace ArkSharp
 
 		public static void WriteDict(ref this Serializer s, IReadOnlyDictionary<int, string> dict)
 		{
-			int count = (dict != null) ? dict.Count : 0;
-			s.WriteLength(count);
+			if (dict == null)
+			{
+				s.WriteLength(0);
+				return;
+			}
+
+			s.WriteLength(dict.Count);
 
 			foreach (var kv in dict)
 			{
@@ -30,8 +40,13 @@ namespace ArkSharp
 
 		public static void WriteDict<T>(ref this Serializer s, IReadOnlyDictionary<int, T> dict) where T : class, ISerializable
 		{
-			int count = (dict != null) ? dict.Count : 0;
-			s.WriteLength(count);
+			if (dict == null)
+			{
+				s.WriteLength(0);
+				return;
+			}
+
+			s.WriteLength(dict.Count);
 
 			foreach (var kv in dict)
 			{
@@ -42,8 +57,13 @@ namespace ArkSharp
 
 		public static void WriteDict(ref this Serializer s, IReadOnlyDictionary<string, int> dict)
 		{
-			int count = (dict != null) ? dict.Count : 0;
-			s.WriteLength(count);
+			if (dict == null)
+			{
+				s.WriteLength(0);
+				return;
+			}
+
+			s.WriteLength(dict.Count);
 
 			foreach (var kv in dict)
 			{
@@ -54,8 +74,13 @@ namespace ArkSharp
 
 		public static void WriteDict(ref this Serializer s, IReadOnlyDictionary<string, string> dict)
 		{
-			int count = (dict != null) ? dict.Count : 0;
-			s.WriteLength(count);
+			if (dict == null)
+			{
+				s.WriteLength(0);
+				return;
+			}
+
+			s.WriteLength(dict.Count);
 
 			foreach (var kv in dict)
 			{
@@ -66,8 +91,13 @@ namespace ArkSharp
 
 		public static void WriteDict<T>(ref this Serializer s, IReadOnlyDictionary<string, T> dict) where T : class, ISerializable
 		{
-			int count = (dict != null) ? dict.Count : 0;
-			s.WriteLength(count);
+			if (dict == null)
+			{
+				s.WriteLength(0);
+				return;
+			}
+
+			s.WriteLength(dict.Count);
 
 			foreach (var kv in dict)
 			{

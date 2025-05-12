@@ -50,9 +50,9 @@ namespace ArkSharp
 		{
 			var dict2 = dict.GetValueOrDefault(key1);
 			if (dict2 == null)
-				return default;
+				return defaultValue;
 
-			return dict2.GetValueOrDefault(key2);
+			return dict2.GetValueOrDefault(key2, defaultValue);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -80,7 +80,7 @@ namespace ArkSharp
 			if (dict3 == null)
 				return defaultValue;
 
-			return dict3.GetValueOrDefault(key3);
+			return dict3.GetValueOrDefault(key3, defaultValue);
 		}
 	}
 }

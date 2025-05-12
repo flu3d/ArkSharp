@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using UnityEngine.UIElements.Experimental;
 
 namespace ArkSharp
 {
@@ -15,6 +14,8 @@ namespace ArkSharp
 		/// <summary>字符串和容器长度使用4字节定长</summary>
 		FixedLen4 = 4,
 
+		/// <summary>使用大端字节序</summary>
+		BigEndian = 0x40,
 		/// <summary>启用变长数值类型</summary>
 		VarInt = 0x80,
 	}
@@ -25,11 +26,10 @@ namespace ArkSharp
 	///
 	/// var bs = new Serializer(buffer);  // 输出到外部分配的定长缓冲区
 	/// 或 var bs = new Serializer(1024);  // 输出到内部创建的可变长缓冲区
-	/// 
+	///
 	/// bs.Write(100);
 	/// bs.Write(-1.0f);
 	/// bs.WriteString("hello");
-	/// bs.WriteInt64V(20250415);
 	///
 	/// var result = ds.GetResult();  // 获取序列化结果
 	/// </summary>
@@ -109,7 +109,7 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Write<T>(T value) where T : unmanaged, Enum
 		{
-			if (options.HasFlag(SerializeOptions.VarInt)) 
+			if (options.HasFlag(SerializeOptions.VarInt))
 				WriteVarIntZg((int)(ValueType)value); // 只支持Enum:int
 			else
 				WriteRaw(value);
@@ -177,6 +177,10 @@ namespace ArkSharp
 			var output = _buffer.Slice(_position, count);
 			MemoryMarshal.Write(output, ref value);
 
+			// 如果大于1字节，并且开启了大端序模式，则反转字节序
+			if (count > 1 && options.HasFlag(SerializeOptions.BigEndian))
+				output.Reverse();
+
 			_position = newPos;
 		}
 
@@ -200,7 +204,7 @@ namespace ArkSharp
 		/// <summary>
 		/// 写入字节流，不附加任何额外信息
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]  
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void WriteRaw(ReadOnlySpan<byte> input)
 		{
 			if (input.IsEmpty)

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using static UnityEngine.Networking.UnityWebRequest;
 
 namespace ArkSharp
 {
@@ -11,11 +9,10 @@ namespace ArkSharp
 	/// 适用于对一段内存buffer进行快速反序列化
 	///
 	/// var ds = new Deserializer(buffer); // buffer是外部加载的二进制数据
-	/// 
+	///
 	/// var iVal = ds.Read<int>();
 	/// var fVal = ds.Read<float>();
 	/// var sVal = ds.ReadString();
-	/// var iVal2 = ds.ReadInt64V();
 	/// </summary>
 	public ref partial struct Deserializer
 	{
@@ -61,7 +58,7 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Read<T>(out T result) where T : unmanaged, Enum
 		{
-			if (options.HasFlag(SerializeOptions.VarInt)) 
+			if (options.HasFlag(SerializeOptions.VarInt))
 				result = (T)(ValueType)(int)ReadVarIntZg(); // 只支持Enum:int
 			else
 				ReadRaw(out result);
@@ -122,8 +119,22 @@ namespace ArkSharp
 		{
 			int count = UnsafeHelper.SizeOf<T>();
 
-			var input = _buffer.Slice(_position, count);
-			var value = MemoryMarshal.Read<T>(input);
+			T value;
+
+			// 如果大于1字节，并且开启了大端序模式，则反转字节序
+			if (count > 1 && options.HasFlag(SerializeOptions.BigEndian))
+			{
+				Span<byte> input = stackalloc byte[count];
+				_buffer.Slice(_position, count).CopyTo(input);
+				input.Reverse();
+
+				value = MemoryMarshal.Read<T>(input);
+			}
+			else
+			{
+				var input = _buffer.Slice(_position, count);
+				value = MemoryMarshal.Read<T>(input);
+			}
 
 			_position += count;
 			return value;

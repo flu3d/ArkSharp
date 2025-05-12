@@ -102,7 +102,7 @@ namespace ArkSharp
 			}
 			*/
 #endif
-			return Activator.CreateInstance(type);
+			return Activator.CreateInstance(type, true);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
