@@ -85,7 +85,7 @@ namespace ArkSharp
 			if (typeof(MonoBehaviour).IsAssignableFrom(type))
 			{
 				var behaviour = GameObject.FindObjectOfType(type);
-				if (behaviour == null)
+                if (behaviour == null && !_isAppQuitting)
 				{
 					var gameObj = new GameObject(type.Name);
 					behaviour = gameObj.AddComponent(type);
@@ -127,5 +127,14 @@ namespace ArkSharp
 			}
 #endif
 		}
+
+#if UNITY_5_3_OR_NEWER
+        static bool _isAppQuitting = false;
+
+        static Singleton()
+		{
+			Application.quitting += () => _isAppQuitting = true;
+		}
+#endif
 	}
 }

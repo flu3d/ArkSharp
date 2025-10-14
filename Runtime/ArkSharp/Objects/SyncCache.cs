@@ -8,7 +8,7 @@ namespace ArkSharp
 	/// <summary>
 	/// 线程安全的KeyValue对象缓存表
 	/// </summary>
-	public class SyncCache<TKey, TValue>
+	public class SyncCache<TKey, TValue> : IDisposable
 	{
 		private readonly Dictionary<TKey, TValue> _dict = new Dictionary<TKey, TValue>();
 		private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
@@ -162,6 +162,11 @@ namespace ArkSharp
 			{
 				_lock.ExitWriteLock();
 			}
+		}
+
+        public void Dispose()
+		{
+			_lock.Dispose();
 		}
 	}
 }

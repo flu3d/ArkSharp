@@ -2,8 +2,8 @@
   "name": "com.flu3d.arksharp",
   "displayName": "ArkSharp",
   "description": "Yet another minimalist toolbox for Unity/C# game developers.",
-  "version": "0.4.2",
-  "unity": "2018.4",
+  "version": "0.5.1",
+  "unity": "2020.3",
   "license": "MIT",
   "author": {
     "name": "RocWood",

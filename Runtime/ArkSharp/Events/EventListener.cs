@@ -16,6 +16,7 @@ namespace ArkSharp
 		void RemoveAll();
 
 		int Count { get; }
+        Type DelegateType { get; }
 
 		/// <summary>
 		/// 通用回调触发
@@ -126,13 +127,13 @@ namespace ArkSharp
 		}
 	}
 
-	public abstract class EventListenerBase<DelegateType> : IEventListener where DelegateType : Delegate
+	public abstract class EventListenerBase<TDelegate> : IEventListener where TDelegate : Delegate
 	{
-		private readonly List<DelegateType> _delegateList = new List<DelegateType>();
-		private DelegateType[] _invocationList;
+		private readonly List<TDelegate> _delegateList = new List<TDelegate>();
+		private TDelegate[] _invocationList;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add(DelegateType callback)
+		public void Add(TDelegate callback)
 		{
 			if (callback == null)
 				return;
@@ -142,7 +143,7 @@ namespace ArkSharp
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Remove(DelegateType callback)
+		public void Remove(TDelegate callback)
 		{
 			if (callback == null)
 				return;
@@ -171,7 +172,7 @@ namespace ArkSharp
 			if (callback == null)
 				return;
 
-			Add((DelegateType)callback);
+			Add((TDelegate)callback);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,11 +181,11 @@ namespace ArkSharp
 			if (callback == null)
 				return;
 
-			Remove((DelegateType)callback);
+			Remove((TDelegate)callback);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected IReadOnlyList<DelegateType> GetInvocationList()
+		protected IReadOnlyList<TDelegate> GetInvocationList()
 		{
 			// 为了防止在Invoke执行阶段时再次调用Add/Remove改变回调列表，需要缓存一份当前的回调清单
 			if (_invocationList == null)
@@ -194,6 +195,7 @@ namespace ArkSharp
 		}
 
 		public int Count => _delegateList.Count;
+        public Type DelegateType => typeof(TDelegate);
 
 		public abstract void InvokeWith(object args);
 

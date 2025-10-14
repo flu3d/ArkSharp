@@ -1,0 +1,27 @@
+{
+    "name": "ArkSharp.Tests",
+    "rootNamespace": "ArkSharp.Test",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "UniTask",
+        "ArkSharp"
+    ],
+    "includePlatforms": [
+        "Editor",
+        "CloudRendering"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -82,7 +82,15 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)] public static void Trace(object message) => Debug.Log(message);
 		[MethodImpl(MethodImplOptions.AggressiveInlining)] public static void Info(object message) => Debug.Log(message);
 		[MethodImpl(MethodImplOptions.AggressiveInlining)] public static void Warn(object message) => Debug.LogWarning(message);
-		[MethodImpl(MethodImplOptions.AggressiveInlining)] public static void Error(object message) => Debug.LogError(message);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Error(object message)
+        {
+            // 如果是异常，使用LogException以获得更好的控制台格式化
+            if (message is System.Exception ex)
+                Debug.LogException(ex);
+            else
+                Debug.LogError(message);
+        }
 
 		static Log()
 		{

@@ -8,9 +8,11 @@
     <EnableDefaultItems>false</EnableDefaultItems>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <DebugType>embedded</DebugType>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="UniTask" Version="2.5.10" />
   </ItemGroup>
   

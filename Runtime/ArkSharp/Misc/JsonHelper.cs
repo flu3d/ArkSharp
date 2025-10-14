@@ -22,7 +22,7 @@ namespace ArkSharp
 			if (string.IsNullOrEmpty(json))
 				return default;
 
-			return JsonConvert.DeserializeObject<T>(json);
+			return JsonConvert.DeserializeObject<T>(json, _jsonSettingsDefault);
 		}
 
 		/// <summary>
@@ -33,7 +33,7 @@ namespace ArkSharp
 			if (string.IsNullOrEmpty(json))
 				return default;
 
-			return JsonConvert.DeserializeObject(json, type);
+			return JsonConvert.DeserializeObject(json, type, _jsonSettingsDefault);
 		}
 
 		private static readonly JsonSerializerSettings _jsonSettingsDefault = new()

@@ -92,7 +92,8 @@ namespace ArkSharp
 		public static Array ToArray(this ReadOnlySpan<char> text, Type type)
 		{
 			// 先转为List再转数组
-			var list = ToList(text, type);
+            var listType = typeof(List<>).MakeGenericType(type.GetElementType());
+			var list = ToList(text, listType);
 
 			var elementType = type.GetElementType();
 			var result = Array.CreateInstance(elementType, list.Count);
@@ -110,7 +111,7 @@ namespace ArkSharp
 
 			var vals = text.Split(DefaultListSeparators);
 
-			var elementType = Reflect.GetGenericArg0(type);
+			var elementType = type.GetGenericArg0();
 			var result = (IList)Activator.CreateInstance(type);
 
 			foreach (var val in vals)
@@ -124,8 +125,8 @@ namespace ArkSharp
 		{
 			text = TrimStartEnd(text, DefaultDictStartEnd);
 
-			var keyType = Reflect.GetGenericArg0(type);
-			var valType = Reflect.GetGenericArg1(type);
+			var keyType = type.GetGenericArg0();
+			var valType = type.GetGenericArg1();
 			var result = (IDictionary)Activator.CreateInstance(type);
 
 			var pairs = text.Split(DefaultListSeparators);

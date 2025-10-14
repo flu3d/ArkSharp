@@ -25,23 +25,27 @@ namespace ArkSharp
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ObjectPool(int limitCount = 0) : this(Activator.CreateInstance<T>, limitCount) {}
-		
-		public int Count {
+
+		public int Count
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _data.Count;
 		}
-		
-		public bool IsEmpty {
+
+		public bool IsEmpty
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _data.Count == 0;
 		}
-		
-		public bool IsFull {
+
+		public bool IsFull
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _limitCount > 0 && _data.Count >= _limitCount;
 		}
 
-		public int LimitCount {
+		public int LimitCount
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _limitCount;
 		}
@@ -74,21 +78,30 @@ namespace ArkSharp
 
 			if (IsFull)
 			{
-				_disposeFunc?.Invoke(obj);
+				_onDisposeFunc?.Invoke(obj);
 				return;
 			}
 
-			_resetFunc?.Invoke(obj);
+			_onReleaseFunc?.Invoke(obj);
 
 			_data.Add(obj);
 		}
 
+        /// <summary>预热对象池，提前创建指定数量的对象并加入池中</summary>
+        /// <param name="withRelease">是否在对象加入池前调用 Release 回调函数</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void WarmUp(int count)
-		{
-			for (int i = 0; i < count && !IsFull; i++)
-				_data.Add(_createFunc.Invoke());
-		}
+        public void WarmUp(int count, bool withRelease = false)
+        {
+            for (int i = 0; i < count && !IsFull; i++)
+            {
+                var obj = _createFunc.Invoke();
+
+                if (withRelease)
+                    _onReleaseFunc?.Invoke(obj);
+
+                _data.Add(obj);
+            }
+        }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
@@ -97,22 +110,22 @@ namespace ArkSharp
 				return;
 
 			for (int i = 0; i < _data.Count; i++)
-				_disposeFunc?.Invoke(_data[i]);
+				_onDisposeFunc?.Invoke(_data[i]);
 
 			_data.Clear();
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ObjectPool<T> CreateWith(Func<T> func) { _createFunc = func; return this; }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ObjectPool<T> CreateWith(Func<T> func) { _createFunc = func; return this; }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ObjectPool<T> ResetWith(Action<T> func) { _resetFunc = func; return this; }
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ObjectPool<T> DisposeWith(Action<T> func) { _disposeFunc = func; return this; }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ObjectPool<T> OnReleaseWith(Action<T> func) { _onReleaseFunc = func; return this; }
 
-		protected Func<T> _createFunc;
-		protected Action<T> _resetFunc;
-		protected Action<T> _disposeFunc;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ObjectPool<T> OnDisposeWith(Action<T> func) { _onDisposeFunc = func; return this; }
+
+        protected Func<T> _createFunc;
+        protected Action<T> _onReleaseFunc;
+        protected Action<T> _onDisposeFunc;
 	}
 }

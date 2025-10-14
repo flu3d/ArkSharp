@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -126,30 +127,27 @@ namespace ArkSharp
 			if (!enumType.IsEnum)
 				return null;
 
-			if (_cacheEnumMembers.TryGetValue(enumType, out var members))
-				return members;
-
-			var names = Enum.GetNames(enumType);
-			var values = Enum.GetValues(enumType);
-
-			var array = new EnumMember[names.Length];
-			for (int i = 0; i < array.Length; i++)
+			return _cacheEnumMembers.GetOrAdd(enumType, static enumType =>
 			{
-				string name = names[i];
-				string alias = null;
+				var names = Enum.GetNames(enumType);
+				var values = Enum.GetValues(enumType);
+
+				var array = new EnumMember[names.Length];
+				for (int i = 0; i < array.Length; i++)
+				{
+					string name = names[i];
+					string alias = null;
 
 #if UNITY_5_3_OR_NEWER
-				var field = enumType.GetField(name, BindingFlags.Static | BindingFlags.Public);
-				alias = field?.GetCustomAttribute<UnityEngine.InspectorNameAttribute>()?.displayName;
-#else
-				// TODO
+					var field = enumType.GetField(name, BindingFlags.Static | BindingFlags.Public);
+					alias = field?.GetCustomAttribute<UnityEngine.InspectorNameAttribute>()?.displayName;
 #endif
 
-				array[i] = new EnumMember(name, alias, values.GetValue(i));
-			}
+					array[i] = new EnumMember(name, alias, values.GetValue(i));
+				}
 
-			_cacheEnumMembers[enumType] = array;
-			return array;
+				return array;
+			});
 		}
 
 		/// <summary>
@@ -169,6 +167,6 @@ namespace ArkSharp
 			public readonly object value;
 		}
 
-		static readonly Dictionary<Type, IReadOnlyList<EnumMember>> _cacheEnumMembers = new Dictionary<Type, IReadOnlyList<EnumMember>>();
+        static readonly ConcurrentDictionary<Type, IReadOnlyList<EnumMember>> _cacheEnumMembers = new ConcurrentDictionary<Type, IReadOnlyList<EnumMember>>();
 	}
 }
