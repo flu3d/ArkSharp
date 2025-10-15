@@ -1,5 +1,5 @@
 {
-    "name": "ArkSharp.Tests",
+    "name": "ArkSharp.Test",
     "rootNamespace": "ArkSharp.Test",
     "references": [
         "UnityEngine.TestRunner",
