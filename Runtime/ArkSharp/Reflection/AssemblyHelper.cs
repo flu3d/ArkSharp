@@ -26,13 +26,20 @@ namespace ArkSharp
 		};
 
         /// <summary>
-		/// 跨程序集查找指定类型
+		/// 跨程序集查找指定类型，如果名字包含`.`则匹配FullName，否则查找Name
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Type FindUserType(string fullName, bool ignoreCase = false)
+		public static Type FindUserType(string typeNameOrFullName, bool ignoreCase = false)
 		{
-			return GetAllUserTypes().FirstOrDefault(t =>
-					string.Compare(t.FullName, fullName, ignoreCase) == 0);
+			if (string.IsNullOrEmpty(typeNameOrFullName))
+				return null;
+
+			if (typeNameOrFullName.Contains('.'))
+				return GetAllUserTypes().FirstOrDefault(t =>
+					string.Compare(t.FullName, typeNameOrFullName, ignoreCase) == 0);
+			else
+				return GetAllUserTypes().FirstOrDefault(t =>
+					string.Compare(t.Name, typeNameOrFullName, ignoreCase) == 0);
 		}
 
 		/// <summary>

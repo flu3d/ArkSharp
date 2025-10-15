@@ -17,8 +17,8 @@ namespace ArkSharp
 			if (obj == null)
 				return null;
 
-			var comp = obj.GetComponent<T>() ?? 
-					obj.AddComponent<T>();
+            if (!obj.TryGetComponent<T>(out var comp))
+                comp = obj.AddComponent<T>();
 
 			return comp;
 		}
@@ -29,8 +29,7 @@ namespace ArkSharp
 			if (obj == null)
 				return;
 
-			var comp = obj.GetComponent<T>();
-			if (comp != null)
+            if (obj.TryGetComponent<T>(out var comp))
 				Object.Destroy(comp);
 		}
 
@@ -75,7 +74,10 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void DestroyChildren(this GameObject obj)
 		{
-			obj?.transform.DestroyChildren();
+			if (obj == null)
+				return;
+
+			obj.transform.DestroyChildren();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -114,6 +116,41 @@ namespace ArkSharp
 				collider.enabled = true;
 			}
 		}
+
+        public static void SetHideFlags(this GameObject obj, HideFlags flags, bool recursively = false)
+        {
+			if (obj == null)
+				return;
+
+            obj.hideFlags = flags;
+
+			if (recursively)
+			{
+	            for (int i = 0; i < obj.transform.childCount; i++)
+				{
+					var child = obj.transform.GetChild(i);
+					child?.gameObject.SetHideFlags(flags, recursively);
+				}
+			}
+        }
+
+        public static void SetLayer(this GameObject obj, int toLayer, int fromLayer = -1, bool recursively = false)
+        {
+			if (obj == null)
+				return;
+
+            if (fromLayer == -1 || obj.layer == fromLayer)
+                obj.layer = toLayer;
+
+			if (recursively)
+			{
+            	for (int i = 0; i < obj.transform.childCount; i++)
+				{
+					var child = obj.transform.GetChild(i);
+            		SetLayer(child.gameObject, toLayer, fromLayer, recursively);
+				}
+            }
+        }
 
 		/// <summary>
 		/// Determines whether a Unity object is null or "fake null", without ever calling
