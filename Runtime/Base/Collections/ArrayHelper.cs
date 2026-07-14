@@ -22,28 +22,35 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool EnsureCapacity<T>(ref T[] array, int count, int minCapacity = 16)
 		{
-			int capacity = array.Length;
+			if (count > MaxLength)
+				return false;
+				
+			long capacity = array.Length;
 			if (count <= capacity)
 				return true;
 
+			if (capacity <= 0)
+			{
+				capacity = minCapacity;
+				if (capacity <= 0)
+					capacity = 1;
+			}
+
+			if (capacity > MaxLength)
+				capacity = MaxLength;
+
 			while (count > capacity)
 			{
-				if (capacity <= 0)
-					capacity = minCapacity;
-				else
-					capacity *= 2;
+				capacity *= 2;
 
-				if ((uint)capacity > MaxLength)
+				if (capacity > MaxLength)
 				{
 					capacity = MaxLength;
 					break;
 				}
 			}
 
-			if (capacity <= array.Length)
-				return false;
-
-			Array.Resize(ref array, capacity);
+			Array.Resize(ref array, (int)capacity);
 			return true;
 		}
 	}

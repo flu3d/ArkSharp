@@ -48,7 +48,7 @@ namespace ArkSharp.Test.Collections
         [Test]
         public void AddRange_WithReadOnlyList_AddsAllItems()
         {
-            var list = new List<int> { 1, 2 };
+            IList<int> list = new List<int> { 1, 2 };
             var source = new List<int> { 3, 4, 5 }.AsReadOnly();
 
             list.AddRange(source);
@@ -60,13 +60,24 @@ namespace ArkSharp.Test.Collections
         [Test]
         public void AddRange_WithEnumerable_AddsAllItems()
         {
-            var list = new List<int> { 1, 2 };
+            IList<int> list = new List<int> { 1, 2 };
             var source = Enumerable.Range(3, 3); // 生成 3,4,5
 
             list.AddRange(source);
 
             Assert.AreEqual(5, list.Count);
             CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5 }, list);
+        }
+
+        [Test]
+        public void AddRange_WithSameList_AddsOriginalItemsOnce()
+        {
+            var source = new List<int> { 1, 2, 3 };
+            IList<int> list = source;
+
+            list.AddRange(source);
+
+            CollectionAssert.AreEqual(new[] { 1, 2, 3, 1, 2, 3 }, list);
         }
 
         [Test]

@@ -14,25 +14,56 @@ namespace ArkSharp
 
 			if (tempKeyList == null)
 				tempKeyList = new List<TKey>(dict.Count);
+			else
+				tempKeyList.Clear();
 
-			foreach (var kv in dict)
+			try
 			{
-				if (predicate(kv))
-					tempKeyList.Add(kv.Key);
-			}
+				foreach (var kv in dict)
+				{
+					if (predicate(kv))
+						tempKeyList.Add(kv.Key);
+				}
 
-			for (int i = 0; i < tempKeyList.Count; i++)
+				for (int i = 0; i < tempKeyList.Count; i++)
+				{
+					dict.Remove(tempKeyList[i]);
+				}
+			}
+			finally
 			{
-				dict.Remove(tempKeyList[i]);
+				tempKeyList.Clear();
 			}
-
-			tempKeyList.Clear();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullOrEmpty<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dict)
 		{
 			return dict == null || dict.Count == 0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue value)
+		{
+			if (dict.TryGetValue(key, out var existingValue))
+				return existingValue;
+
+			dict.Add(key, value);
+			return value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, Func<TValue> valueFactory)
+		{
+			if (valueFactory == null)
+				throw new ArgumentNullException(nameof(valueFactory));
+
+			if (dict.TryGetValue(key, out var existingValue))
+				return existingValue;
+
+			var value = valueFactory();
+			dict.Add(key, value);
+			return value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

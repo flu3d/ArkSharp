@@ -62,11 +62,20 @@ namespace ArkSharp.Test.Collections
         }
 
         [Test]
-        public void EnsureCapacity_WithMaxLength_ResizesToMaxLength()
+        public void EnsureCapacity_WithCountExceedingMaxLength_ReturnsFalseWithoutResizing()
         {
             var array = new byte[10];
-            Assert.IsTrue(ArrayHelper.EnsureCapacity(ref array, ArrayHelper.MaxLength + 1));
-            Assert.AreEqual(ArrayHelper.MaxLength, array.Length);
+            Assert.IsFalse(ArrayHelper.EnsureCapacity(ref array, ArrayHelper.MaxLength + 1));
+            Assert.AreEqual(10, array.Length);
+        }
+
+        [Test]
+        public void EnsureCapacity_WithNonPositiveMinCapacity_UsesMinimumCapacityOfOne()
+        {
+            var array = Array.Empty<int>();
+
+            Assert.IsTrue(ArrayHelper.EnsureCapacity(ref array, 1, 0));
+            Assert.AreEqual(1, array.Length);
         }
 
         [Test]

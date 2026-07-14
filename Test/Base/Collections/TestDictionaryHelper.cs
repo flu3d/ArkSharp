@@ -56,6 +56,33 @@ namespace ArkSharp.Test.Collections
         }
 
         [Test]
+        public void RemoveAll_WithNonEmptyTempList_DoesNotRemoveKeysFromPreviousUse()
+        {
+            var dict = new Dictionary<string, int>
+            {
+                { "keep", 1 },
+                { "remove", 2 }
+            };
+            var tempList = new List<string> { "keep" };
+
+            dict.RemoveAll(kv => kv.Value == 2, tempList);
+
+            Assert.IsTrue(dict.ContainsKey("keep"));
+            Assert.IsFalse(dict.ContainsKey("remove"));
+            Assert.AreEqual(0, tempList.Count);
+        }
+
+        [Test]
+        public void RemoveAll_WhenPredicateThrows_ClearsTempList()
+        {
+            var dict = new Dictionary<string, int> { { "key", 1 } };
+            var tempList = new List<string>();
+
+            Assert.Throws<InvalidOperationException>(() => dict.RemoveAll(_ => throw new InvalidOperationException(), tempList));
+            Assert.AreEqual(0, tempList.Count);
+        }
+
+        [Test]
         public void IsNullOrEmpty_WithNullDictionary_ReturnsTrue()
         {
             IReadOnlyDictionary<int, string> dict = null;
@@ -74,6 +101,50 @@ namespace ArkSharp.Test.Collections
         {
             var dict = new Dictionary<int, string> { { 1, "one" } };
             Assert.IsFalse(dict.IsNullOrEmpty());
+        }
+
+        [Test]
+        public void GetOrAdd_WithValue_AddsAndReturnsValueWhenKeyIsMissing()
+        {
+            var dict = new Dictionary<string, string>();
+
+            var result = dict.GetOrAdd("key", "value");
+
+            Assert.AreEqual("value", result);
+            Assert.AreEqual("value", dict["key"]);
+        }
+
+        [Test]
+        public void GetOrAdd_WithValue_ReturnsExistingValueWhenKeyExists()
+        {
+            var existing = new object();
+            var dict = new Dictionary<string, object> { { "key", existing } };
+
+            var result = dict.GetOrAdd("key", new object());
+
+            Assert.AreSame(existing, result);
+            Assert.AreEqual(1, dict.Count);
+        }
+
+        [Test]
+        public void GetOrAdd_WithFactory_CreatesValueOnlyWhenKeyIsMissing()
+        {
+            var dict = new Dictionary<string, List<int>>();
+            var factoryCallCount = 0;
+
+            var added = dict.GetOrAdd("key", () =>
+            {
+                factoryCallCount++;
+                return new List<int>();
+            });
+            var existing = dict.GetOrAdd("key", () =>
+            {
+                factoryCallCount++;
+                return new List<int>();
+            });
+
+            Assert.AreSame(added, existing);
+            Assert.AreEqual(1, factoryCallCount);
         }
 
         [Test]

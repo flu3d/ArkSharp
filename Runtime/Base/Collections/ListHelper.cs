@@ -42,7 +42,8 @@ namespace ArkSharp
 			var c = collection as IReadOnlyList<T>;
 			if (c != null)
 			{
-				for (int i = 0; i < c.Count; i++)
+				int count = c.Count;
+				for (int i = 0; i < count; i++)
 					list.Add(c[i]);
 			}
 			else

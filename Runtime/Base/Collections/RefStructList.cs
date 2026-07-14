@@ -54,21 +54,17 @@ namespace ArkSharp
 		public void Add(in T value)
 		{
 			int index = _size;
-
-			_size++;
-			EnsureCapacity(_size);
-
+			EnsureCapacity(index + 1);
 			_items[index] = value;
+			_size = index + 1;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T AddRef()
 		{
 			int index = _size;
-
-			_size++;
-			EnsureCapacity(_size);
-
+			EnsureCapacity(index + 1);
+			_size = index + 1;
 			return ref _items[index];
 		}
 
@@ -78,8 +74,8 @@ namespace ArkSharp
 			if (count <= _size)
 				return;
 
+			EnsureCapacity(count);
 			_size = count;
-			EnsureCapacity(_size);
 		}
 
 		/// <summary>
@@ -127,7 +123,8 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void EnsureCapacity(int count)
 		{
-			ArrayHelper.EnsureCapacity(ref _items, count, DefaultCapacity);
+			if (!ArrayHelper.EnsureCapacity(ref _items, count, DefaultCapacity))
+				throw new ArgumentOutOfRangeException(nameof(count));
 		}
 	}
 }
