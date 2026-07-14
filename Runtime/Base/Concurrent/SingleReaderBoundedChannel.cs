@@ -14,6 +14,10 @@ namespace ArkSharp
 
 		public bool IsClosed => _isClosed;
 
+		/// <summary>
+		/// 创建定长通道。
+		/// </summary>
+		/// <param name="capacity">环形缓冲区长度，必须是2的幂次方；通道最多缓存capacity - 1个元素</param>
 		public SingleReaderBoundedChannel(int capacity)
 		{
 			_queue = new CircularQueue<T>(capacity);

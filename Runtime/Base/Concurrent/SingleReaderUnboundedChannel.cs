@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace ArkSharp
@@ -9,7 +9,7 @@ namespace ArkSharp
 	/// </summary>
 	public sealed class SingleReaderUnboundedChannel<T> : ISingleReaderChannel<T>, IDisposable
 	{
-		private readonly ConcurrentQueue<T> _queue = new ConcurrentQueue<T>();
+		private readonly Queue<T> _queue = new Queue<T>();
 		private readonly object _syncRoot = new object();
 		private volatile bool _isClosed;
 
@@ -20,17 +20,15 @@ namespace ArkSharp
 		/// </summary>
 		public bool Write(T item)
 		{
-			if (_isClosed)
-				return false;
-
-			_queue.Enqueue(item);
-
 			lock (_syncRoot)
 			{
-				Monitor.Pulse(_syncRoot);
-			}
+				if (_isClosed)
+					return false;
 
-			return true;
+				_queue.Enqueue(item);
+				Monitor.Pulse(_syncRoot);
+				return true;
+			}
 		}
 
 		/// <summary>
@@ -38,31 +36,36 @@ namespace ArkSharp
 		/// </summary>
 		public bool Read(out T item)
 		{
-			while (true)
+			lock (_syncRoot)
 			{
-				if (_queue.TryDequeue(out item))
-					return true;
-
-				if (_isClosed)
-					return false;
-
-				lock (_syncRoot)
+				while (_queue.Count == 0)
 				{
+					if (_isClosed)
+					{
+						item = default;
+						return false;
+					}
+
 					Monitor.Wait(_syncRoot);
 				}
+
+				item = _queue.Dequeue();
+				return true;
 			}
 		}
 
+		/// <summary>
+		/// 关闭队列，不再接收新数据，已有数据可以继续读取直到队列空。
+		/// </summary>
 		public void Close()
 		{
-			if (_isClosed)
-				return;
-
-			_isClosed = true;
-
 			lock (_syncRoot)
 			{
-				Monitor.Pulse(_syncRoot);
+				if (_isClosed)
+					return;
+
+				_isClosed = true;
+				Monitor.PulseAll(_syncRoot);
 			}
 		}
 

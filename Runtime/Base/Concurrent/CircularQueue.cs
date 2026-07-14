@@ -18,7 +18,7 @@ namespace ArkSharp
 		/// <summary>
 		/// 定长循环队列
 		/// </summary>
-		/// <param name="capacity">队列长度，必须是2的幂次方</param>
+		/// <param name="capacity">环形缓冲区长度，必须是2的幂次方；可存储的元素数量为capacity - 1</param>
 		public CircularQueue(int capacity)
 		{
 			if (capacity < 2 || (capacity & (capacity - 1)) != 0)
@@ -61,6 +61,7 @@ namespace ArkSharp
 			}
 
 			item = _buffer[readPos];
+			_buffer[readPos] = default;
 
 			int nextPos = (readPos + 1) & _mask;
 			Volatile.Write(ref _readPos.Value, nextPos);

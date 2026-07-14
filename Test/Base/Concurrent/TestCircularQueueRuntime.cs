@@ -10,13 +10,11 @@ namespace ArkSharp.Test.Concurrent
     public class TestCircularQueueRuntime
     {
         [Test]
-        public void ThreadSafety_SingleProducerSingleConsumer_WorksCorrectly()
-        {
-            var queue = new CircularQueue<int>(8);
-            var count = 1000;
-            var producerDone = false;
-            var consumerSum = 0;
-            var expectedSum = (count * (count - 1)) / 2; // 0到count-1的和
+		public void ThreadSafety_SingleProducerSingleConsumer_WorksCorrectly()
+		{
+			var queue = new CircularQueue<int>(8);
+			var count = 1000;
+			var received = new int[count];
 
             // 生产者任务
             var producerTask = Task.Run(() =>
@@ -28,17 +26,17 @@ namespace ArkSharp.Test.Concurrent
                         Thread.Sleep(1); // 队列满时等待
                     }
                 }
-                producerDone = true;
-            });
+			});
 
             // 消费者任务
             var consumerTask = Task.Run(() =>
             {
-                while (!producerDone || !queue.IsEmpty)
-                {
-                    if (queue.TryDequeue(out var item))
-                    {
-                        consumerSum += item;
+				int index = 0;
+				while (index < count)
+				{
+					if (queue.TryDequeue(out var item))
+					{
+						received[index++] = item;
                     }
                     else
                     {
@@ -47,8 +45,12 @@ namespace ArkSharp.Test.Concurrent
                 }
             });
 
-            Task.WhenAll(producerTask, consumerTask).GetAwaiter().GetResult();
-            Assert.AreEqual(expectedSum, consumerSum);
-        }
+			var allTasks = Task.WhenAll(producerTask, consumerTask);
+			Assert.IsTrue(allTasks.Wait(System.TimeSpan.FromSeconds(5)), "生产者和消费者未能在限定时间内完成");
+			allTasks.GetAwaiter().GetResult();
+
+			for (int i = 0; i < count; i++)
+				Assert.AreEqual(i, received[i]);
+		}
     }
 }
