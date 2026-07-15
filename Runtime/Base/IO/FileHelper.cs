@@ -13,8 +13,11 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async UniTask<string> ReadText(string path)
 		{
-			var bytes = await ReadBytes(path);
-			return Encoding.UTF8.GetString(bytes);
+#if UNITY_5_3_OR_NEWER
+			return await UniTask.RunOnThreadPool(() => File.ReadAllText(path, Encoding.UTF8));
+#else
+			return await File.ReadAllTextAsync(path, Encoding.UTF8);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

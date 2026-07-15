@@ -15,11 +15,25 @@ namespace ArkSharp
 {
 	public readonly struct WebResult
 	{
+		private static readonly byte[] UTF8_BOM = Encoding.UTF8.GetPreamble();
+
 		public readonly byte[] Bytes;
 		public readonly string Error;
 
 		public bool IsSuccess => string.IsNullOrEmpty(Error);
-		public string Text => Bytes == null ? null : Encoding.UTF8.GetString(Bytes);
+		public string Text
+		{
+			get
+			{
+				if (Bytes == null)
+					return null;
+				if (Bytes.Length <= 0)
+					return string.Empty;
+
+				var offset = Bytes.AsSpan().StartsWith(UTF8_BOM) ? UTF8_BOM.Length : 0;
+				return Encoding.UTF8.GetString(Bytes, offset, Bytes.Length - offset);
+			}
+		}
 
 		public WebResult(byte[] bytes, string error)
 		{
@@ -112,7 +126,10 @@ namespace ArkSharp
 				else
 					s.Append('&');
 
-				s.AppendFormat("{0}={1}", kv.Key, Uri.EscapeDataString(kv.Value));
+				if (string.IsNullOrEmpty(kv.Key))
+					throw new ArgumentException("Query string key cannot be null or empty.", nameof(kv.Key));
+
+				s.AppendFormat("{0}={1}", kv.Key, Uri.EscapeDataString(kv.Value.NullToEmpty()));
 			}
 
 			return s.ToString();

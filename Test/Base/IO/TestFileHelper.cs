@@ -37,6 +37,30 @@ namespace ArkSharp.Test.IO
 		}
 
 		[Test]
+		public async Task TestReadTextWithUtf8Bom()
+		{
+			var filePath = Path.GetTempFileName();
+			var fileContent = _stringData01;
+			var preamble = Encoding.UTF8.GetPreamble();
+			var content = Encoding.UTF8.GetBytes(fileContent);
+			var bytes = new byte[preamble.Length + content.Length];
+
+			try
+			{
+				Buffer.BlockCopy(preamble, 0, bytes, 0, preamble.Length);
+				Buffer.BlockCopy(content, 0, bytes, preamble.Length, content.Length);
+				File.WriteAllBytes(filePath, bytes);
+
+				var result = await FileHelper.ReadText(filePath);
+				Assert.AreEqual(fileContent, result);
+			}
+			finally
+			{
+				File.Delete(filePath);
+			}
+		}
+
+		[Test]
 		public async Task TestReadTextNotFound()
 		{
 			var filePath = Path.GetTempFileName();

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -49,20 +50,21 @@ namespace ArkSharp
 			{
 				// Use URL instead of Path for Android APK
 				// "/data/app/com.xxx.xxx-1/base.apk!assets/" => "jar:file:///data/app/com.xx.xxx-1/base.apk!/assets/"
-				int pos = path.IndexOf(".apk!");
+				int pos = path.IndexOf(".apk!", System.StringComparison.Ordinal);
 				if (pos > 0)
 				{
-					if (path[pos + 5] != '/')
+					if (pos + 5 >= path.Length || path[pos + 5] != '/')
 						path = path.Insert(pos + 5, "/");
 
 					return "jar:file://" + path;
 				}
 			}
 
-			if (path.StartsWith("/"))
-				return "file://" + path;
-			else
-				return "file:///" + path;
+			if (!path.StartsWith("/"))
+				path = GetFullPath(path);
+
+			var uriBuilder = new UriBuilder(Uri.UriSchemeFile, string.Empty) { Path = path };
+			return uriBuilder.Uri.AbsoluteUri;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -71,7 +73,7 @@ namespace ArkSharp
 			if (string.IsNullOrEmpty(path))
 				return false;
 
-			return 
+			return
 				path.StartsWith("jar:") ||
 				path.StartsWith("http:") ||
 				path.StartsWith("https:") ||
