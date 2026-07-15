@@ -73,7 +73,10 @@ namespace ArkSharp
 			var list = new List<T>();
 			To(text, ref list, separator);
 
-			result = list.ToArray();
+			if (result == null || result.Length != list.Count)
+				result = list.ToArray();
+			else
+				list.CopyTo(result);
 		}
 
 		/// <summary>
@@ -153,7 +156,7 @@ namespace ArkSharp
 			var pairs = text.Split(separator ?? DefaultListSeparators);
 			foreach (var pair in pairs)
 			{
-				var kvs = pair.Split(DefaultDictSeparators, 2);
+				var kvs = pair.Split(separatorKV, 2);
 
 				var key = default(K);
 				var val = default(V);

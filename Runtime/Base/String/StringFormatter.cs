@@ -69,11 +69,15 @@ namespace ArkSharp
 				sb.Append(separator);
 			}
 
-			return sb.ToString(0, sb.Length - 1);
+			if (!string.IsNullOrEmpty(separator))
+				sb.Length -= separator.Length;
+
+			return sb.ToString();
 		}
 
+		// 仅供ToString(object)分派，保持私有以避免List<T>同时匹配IReadOnlyList<T>和IList时产生重载歧义。
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToString(IList list, string separator = DefaultListFormatingSeparator)
+		private static string ToString(IList list, string separator = DefaultListFormatingSeparator)
 		{
 			if (list == null || list.Count == 0)
 				return string.Empty;
@@ -85,7 +89,10 @@ namespace ArkSharp
 				sb.Append(separator);
 			}
 
-			return sb.ToString(0, sb.Length - 1);
+			if (!string.IsNullOrEmpty(separator))
+				sb.Length -= separator.Length;
+
+			return sb.ToString();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -103,11 +110,15 @@ namespace ArkSharp
 				sb.Append(separator);
 			}
 
-			return sb.ToString(0, sb.Length - 1);
+			if (!string.IsNullOrEmpty(separator))
+				sb.Length -= separator.Length;
+
+			return sb.ToString();
 		}
 
+		// 仅供ToString(object)分派，保持私有以避免Dictionary<K, V>同时匹配IReadOnlyDictionary<K, V>和IDictionary时产生重载歧义。
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToString(IDictionary dict, string separator = DefaultListFormatingSeparator, string separatorKV = DefaultDictFormatingSeparator)
+		private static string ToString(IDictionary dict, string separator = DefaultListFormatingSeparator, string separatorKV = DefaultDictFormatingSeparator)
 		{
 			if (dict == null || dict.Count == 0)
 				return string.Empty;
@@ -122,7 +133,10 @@ namespace ArkSharp
 				sb.Append(separator);
 			}
 
-			return sb.ToString(0, sb.Length - 1);
+			if (!string.IsNullOrEmpty(separator))
+				sb.Length -= separator.Length;
+
+			return sb.ToString();
 		}
 
 		static StringFormatter()

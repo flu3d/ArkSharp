@@ -24,8 +24,13 @@ namespace ArkSharp
 		}
 
 		/// <summary>
-		/// 分割Span字符串，默认返回迭代器而不是数组
+		/// 分割Span字符串，默认返回迭代器而不是数组。
+		/// 达到count限制时，最后一项包含未分割的剩余文本。
 		/// </summary>
+		/// <param name="s">待分割文本。</param>
+		/// <param name="separators">分隔符集合。</param>
+		/// <param name="count">最多返回的项数。</param>
+		/// <param name="options">分割选项。</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SpanCharSplitEnumerable Split(this ReadOnlySpan<char> s, ReadOnlySpan<char> separators, int count = int.MaxValue, StringSplitOptions options = StringSplitOptions.None)
 		{
@@ -68,6 +73,24 @@ namespace ArkSharp
 		{
 			while (_count > 0 && _position <= _input.Length)
 			{
+				// 最后一个配额直接返回剩余文本，避免继续分割导致内容丢失。
+				if (_count == 1)
+				{
+					if ((_options & StringSplitOptions.RemoveEmptyEntries) != 0)
+					{
+						while (_position < _input.Length && _separators.IndexOf(_input[_position]) >= 0)
+							_position++;
+
+						if (_position >= _input.Length)
+							return false;
+					}
+
+					Current = _input[_position..];
+					_position = _input.Length + 1;
+					_count = 0;
+					return true;
+				}
+
 				int nextPos = _input[_position..].IndexOfAny(_separators);
 				if (nextPos == -1)
 					nextPos = _input.Length - _position;
@@ -84,15 +107,6 @@ namespace ArkSharp
 				return true;
 			}
 
-			// 处理最后剩余部分
-			if (_count > 0 && _position < _input.Length)
-			{
-				Current = _input[_position..];
-				_position = _input.Length;
-				_count = 0;
-				return true;
-			}
-				
 			return false;
 		}
 	}

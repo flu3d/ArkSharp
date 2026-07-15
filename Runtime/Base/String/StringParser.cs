@@ -109,11 +109,12 @@ namespace ArkSharp
 		{
 			text = TrimStartEnd(text, DefaultListStartEnd);
 
-			var vals = text.Split(DefaultListSeparators);
-
 			var elementType = type.GetGenericArg0();
 			var result = (IList)Activator.CreateInstance(type);
+			if (text.IsEmpty)
+				return result;
 
+			var vals = text.Split(DefaultListSeparators);
 			foreach (var val in vals)
 				result.Add(To(val, elementType));
 
@@ -128,6 +129,8 @@ namespace ArkSharp
 			var keyType = type.GetGenericArg0();
 			var valType = type.GetGenericArg1();
 			var result = (IDictionary)Activator.CreateInstance(type);
+			if (text.IsEmpty)
+				return result;
 
 			var pairs = text.Split(DefaultListSeparators);
 			foreach (var pair in pairs)
