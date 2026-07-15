@@ -2,11 +2,16 @@ using NUnit.Framework;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+
+#if UNITY_5_3_OR_NEWER
 using UnityEngine.TestTools;
+#endif
 
 namespace ArkSharp.Test.IO
 {
+#if UNITY_5_3_OR_NEWER
 	[RequiresPlayMode]
+#endif
 	[TestFixture]
 	public class TestFileHelper
 	{

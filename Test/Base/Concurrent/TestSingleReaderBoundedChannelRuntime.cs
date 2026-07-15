@@ -1,11 +1,16 @@
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+
+#if UNITY_5_3_OR_NEWER
 using UnityEngine.TestTools;
+#endif
 
 namespace ArkSharp.Test.Concurrent
 {
+#if UNITY_5_3_OR_NEWER
     [RequiresPlayMode]
+#endif
     [TestFixture]
     public class TestSingleReaderBoundedChannelRuntime
     {
@@ -17,22 +22,25 @@ namespace ArkSharp.Test.Concurrent
         /// 4. 验证通道关闭后消费者能正确退出
         /// </summary>
         [Test]
-        public void ThreadSafety_SingleProducerSingleConsumer_WorksCorrectly()
-        {
-            var channel = new SingleReaderBoundedChannel<int>(8);
-            var count = 1000;
+		public void ThreadSafety_SingleProducerSingleConsumer_WorksCorrectly()
+		{
+			var channel = new SingleReaderBoundedChannel<int>(8);
+			var count = 1000;
             var received = new int[count];
 
             // 生产者任务
             var producerTask = Task.Run(() =>
             {
-                for (int i = 0; i < count; i++)
-                {
-                    while (!channel.Write(i))
-                    {
-                        Thread.Sleep(1);
-                    }
-                }
+				for (int i = 0; i < count; i++)
+				{
+					while (!channel.Write(i))
+					{
+						if (channel.IsClosed)
+							return;
+
+						Thread.Sleep(1);
+					}
+				}
                 channel.Close();
             });
 
@@ -46,10 +54,18 @@ namespace ArkSharp.Test.Concurrent
                 }
             });
 
-			WaitForCompletion(Task.WhenAll(producerTask, consumerTask));
+			try
+			{
+				WaitForCompletion(Task.WhenAll(producerTask, consumerTask));
 
-			for (int i = 0; i < count; i++)
-				Assert.AreEqual(i, received[i]);
+				for (int i = 0; i < count; i++)
+					Assert.AreEqual(i, received[i]);
+			}
+			finally
+			{
+				channel.Close();
+				WaitForCompletion(Task.WhenAll(producerTask, consumerTask));
+			}
         }
 
         /// <summary>
@@ -128,7 +144,7 @@ namespace ArkSharp.Test.Concurrent
 		}
 
 		[Test]
-		public async Task Read_WhenEmpty_IsUnblockedByWrite()
+		public void Read_WhenEmpty_IsUnblockedByWrite()
 		{
 			var channel = new SingleReaderBoundedChannel<int>(2);
 			using var readerStarted = new ManualResetEventSlim();
@@ -138,13 +154,22 @@ namespace ArkSharp.Test.Concurrent
 				return channel.Read(out var item) ? item : -1;
 			});
 
-			Assert.IsTrue(readerStarted.Wait(System.TimeSpan.FromSeconds(1)));
-			Assert.IsTrue(channel.Write(42));
-			Assert.AreEqual(42, await WaitForResult(readTask));
+			try
+			{
+				Assert.IsTrue(readerStarted.Wait(System.TimeSpan.FromSeconds(1)));
+				Assert.IsTrue(channel.Write(42));
+				Assert.IsTrue(readTask.Wait(System.TimeSpan.FromSeconds(1)), "阻塞读取未能在限定时间内完成");
+				Assert.AreEqual(42, readTask.GetAwaiter().GetResult());
+			}
+			finally
+			{
+				channel.Close();
+				WaitForCompletion(readTask);
+			}
 		}
 
 		[Test]
-		public async Task Read_WhenEmpty_IsUnblockedByClose()
+		public void Read_WhenEmpty_IsUnblockedByClose()
 		{
 			var channel = new SingleReaderBoundedChannel<int>(2);
 			using var readerStarted = new ManualResetEventSlim();
@@ -154,9 +179,18 @@ namespace ArkSharp.Test.Concurrent
 				return channel.Read(out _);
 			});
 
-			Assert.IsTrue(readerStarted.Wait(System.TimeSpan.FromSeconds(1)));
-			channel.Close();
-			Assert.IsFalse(await WaitForResult(readTask));
+			try
+			{
+				Assert.IsTrue(readerStarted.Wait(System.TimeSpan.FromSeconds(1)));
+				channel.Close();
+				Assert.IsTrue(readTask.Wait(System.TimeSpan.FromSeconds(1)), "阻塞读取未能在限定时间内完成");
+				Assert.IsFalse(readTask.GetAwaiter().GetResult());
+			}
+			finally
+			{
+				channel.Close();
+				WaitForCompletion(readTask);
+			}
 		}
 
 		[Test]
@@ -181,7 +215,12 @@ namespace ArkSharp.Test.Concurrent
 					{
 						int item = index * itemsPerProducer + sequence;
 						while (!channel.Write(item))
+						{
+							if (channel.IsClosed)
+								return;
+
 							Thread.Yield();
+						}
 					}
 
 					if (Interlocked.Decrement(ref remainingProducers) == 0)
@@ -204,12 +243,21 @@ namespace ArkSharp.Test.Concurrent
 				}
 			});
 
-			WaitForCompletion(Task.WhenAll(producerTasks));
-			WaitForCompletion(consumerTask);
-			Assert.Zero(invalidItemCount);
-			Assert.AreEqual(totalItems, receivedCount);
-			for (int i = 0; i < received.Length; i++)
-				Assert.IsTrue(received[i], $"未收到元素{i}");
+			try
+			{
+				WaitForCompletion(Task.WhenAll(producerTasks));
+				WaitForCompletion(consumerTask);
+				Assert.Zero(invalidItemCount);
+				Assert.AreEqual(totalItems, receivedCount);
+				for (int i = 0; i < received.Length; i++)
+					Assert.IsTrue(received[i], $"未收到元素{i}");
+			}
+			finally
+			{
+				channel.Close();
+				WaitForCompletion(Task.WhenAll(producerTasks));
+				WaitForCompletion(consumerTask);
+			}
 		}
 
 		[Test]
@@ -243,20 +291,29 @@ namespace ArkSharp.Test.Concurrent
 					});
 				}
 
-				start.Set();
-				Assert.IsTrue(SpinWait.SpinUntil(() =>
-					Volatile.Read(ref startedProducerCount) == producerCount && Volatile.Read(ref successfulWriteCount) > 0,
-					System.TimeSpan.FromSeconds(1)));
-				channel.Close();
+				try
+				{
+					start.Set();
+					Assert.IsTrue(SpinWait.SpinUntil(() =>
+						Volatile.Read(ref startedProducerCount) == producerCount && Volatile.Read(ref successfulWriteCount) > 0,
+						System.TimeSpan.FromSeconds(1)));
+					channel.Close();
 
-				WaitForCompletion(Task.WhenAll(producerTasks));
+					WaitForCompletion(Task.WhenAll(producerTasks));
 
-				int readCount = 0;
-				while (channel.Read(out _))
-					readCount++;
+					int readCount = 0;
+					while (channel.Read(out _))
+						readCount++;
 
-				Assert.Greater(successfulWriteCount, 0);
-				Assert.AreEqual(successfulWriteCount, readCount);
+					Assert.Greater(successfulWriteCount, 0);
+					Assert.AreEqual(successfulWriteCount, readCount);
+				}
+				finally
+				{
+					start.Set();
+					channel.Close();
+					WaitForCompletion(Task.WhenAll(producerTasks));
+				}
 			}
 		}
 
@@ -278,11 +335,5 @@ namespace ArkSharp.Test.Concurrent
 			task.GetAwaiter().GetResult();
 		}
 
-		private static async Task<T> WaitForResult<T>(Task<T> task)
-		{
-			var completedTask = await Task.WhenAny(task, Task.Delay(System.TimeSpan.FromSeconds(1)));
-			Assert.AreSame(task, completedTask, "阻塞读取未能在限定时间内完成");
-			return await task;
-		}
 	}
 }

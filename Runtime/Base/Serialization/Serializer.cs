@@ -175,7 +175,11 @@ namespace ArkSharp
 				throw new ArgumentOutOfRangeException();
 
 			var output = _buffer.Slice(_position, count);
+#if UNITY_5_3_OR_NEWER
 			MemoryMarshal.Write(output, ref value);
+#else
+			MemoryMarshal.Write(output, in value);
+#endif
 
 			// 如果大于1字节，并且开启了大端序模式，则反转字节序
 			if (count > 1 && options.HasFlag(SerializeOptions.BigEndian))

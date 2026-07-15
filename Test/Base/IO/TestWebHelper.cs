@@ -3,11 +3,16 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
+
+#if UNITY_5_3_OR_NEWER
 using UnityEngine.TestTools;
+#endif
 
 namespace ArkSharp.Test.IO
 {
+#if UNITY_5_3_OR_NEWER
 	[RequiresPlayMode]
+#endif
 	[TestFixture]
 	public class TestWebHelper
 	{
@@ -49,7 +54,7 @@ namespace ArkSharp.Test.IO
 				var result = await WebHelper.Fetch(url, false);
 
 				Assert.False(result.IsSuccess);
-				Assert.NotEmpty(result.Error);
+				Assert.IsNotEmpty(result.Error);
 				Assert.IsNull(result.Bytes);
 				Assert.IsNull(result.Text);
 			}
@@ -75,7 +80,7 @@ namespace ArkSharp.Test.IO
 
 				Assert.GreaterOrEqual(stopwatch.ElapsedMilliseconds, (MAX_ATTEMPT_COUNT - 1) * RETRY_INTERVAL_MS);
 				Assert.False(result.IsSuccess);
-				Assert.NotEmpty(result.Error);
+				Assert.IsNotEmpty(result.Error);
 				Assert.IsNull(result.Text);
 			}
 			finally
