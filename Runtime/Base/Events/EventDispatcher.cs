@@ -29,6 +29,9 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveTarget(object target)
 		{
+			if (target == null)
+				return;
+
 			lock (_syncRoot)
 			{
 				foreach (var kv in _listeners)

@@ -81,10 +81,14 @@ namespace ArkSharp
 			_queue.Enqueue(new EventData(eventName, Tuple.Create(p1, p2, p3, p4, p5)));
 		}
 
+		/// <summary>
+		/// 处理调用开始时已入队的所有事件。处理期间新入队的事件留到下次调用。
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void PollAll()
 		{
-			while (_queue.TryDequeue(out var e))
+			var count = _queue.Count;
+			for (int i = 0; i < count && _queue.TryDequeue(out var e); i++)
 				_dispatcher.DispatchWith(e.name, e.args);
 		}
 

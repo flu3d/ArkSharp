@@ -5,6 +5,10 @@ namespace ArkSharp.Test.Events
 {
 	public class TestEventListener
 	{
+		static int _staticCallbackCount;
+
+		static void InvokeStaticCallback() => _staticCallbackCount++;
+
 		[Test]
 		public void TestAddRemove()
 		{
@@ -40,6 +44,73 @@ namespace ArkSharp.Test.Events
 			Assert.AreEqual(2, listener.Count);
 			listener.RemoveAll();
 			Assert.AreEqual(0, listener.Count);
+		}
+
+		[Test]
+		public void TestRemoveNullTargetDoesNotRemoveStaticCallback()
+		{
+			_staticCallbackCount = 0;
+
+			var listener = new EventListener();
+			listener.Add(InvokeStaticCallback);
+			listener.RemoveTarget(null);
+			listener.Invoke();
+
+			Assert.AreEqual(1, _staticCallbackCount);
+		}
+
+		[Test]
+		public void TestModifyListenersDuringInvoke()
+		{
+			var listener = new EventListener();
+			var firstCount = 0;
+			var secondCount = 0;
+			var addedCount = 0;
+			Action first = null;
+			Action added = () => addedCount++;
+
+			first = () =>
+			{
+				firstCount++;
+				listener.Remove(first);
+				listener.Add(added);
+			};
+
+			listener.Add(first);
+			listener.Add(() => secondCount++);
+
+			listener.Invoke();
+			Assert.AreEqual(1, firstCount);
+			Assert.AreEqual(1, secondCount);
+			Assert.AreEqual(0, addedCount);
+
+			listener.Invoke();
+			Assert.AreEqual(1, firstCount);
+			Assert.AreEqual(2, secondCount);
+			Assert.AreEqual(1, addedCount);
+		}
+
+		[Test]
+		public void TestRemoveAllDuringInvokeUsesCurrentSnapshot()
+		{
+			var listener = new EventListener();
+			var firstCount = 0;
+			var secondCount = 0;
+
+			listener.Add(() =>
+			{
+				firstCount++;
+				listener.RemoveAll();
+			});
+			listener.Add(() => secondCount++);
+
+			listener.Invoke();
+			Assert.AreEqual(1, firstCount);
+			Assert.AreEqual(1, secondCount);
+
+			listener.Invoke();
+			Assert.AreEqual(1, firstCount);
+			Assert.AreEqual(1, secondCount);
 		}
 
 		[Test]

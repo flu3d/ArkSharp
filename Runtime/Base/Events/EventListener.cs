@@ -155,6 +155,9 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveTarget(object target)
 		{
+			if (target == null)
+				return;
+
 			_delegateList.RemoveAll(c => c.Target == target);
 			_invocationList = null;
 		}
