@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,15 +41,22 @@ namespace ArkSharp.Test.IO
 		{
 			var filePath = Path.GetTempFileName();
 			File.Delete(filePath);
+			Exception exception = null;
 
 			try
 			{
-				Assert.ThrowsAsync<FileNotFoundException>(async () => await FileHelper.ReadText(filePath));
+				await FileHelper.ReadText(filePath);
+			}
+			catch (Exception e)
+			{
+				exception = e;
 			}
 			finally
 			{
 				File.Delete(filePath);
 			}
+
+			Assert.IsInstanceOf<FileNotFoundException>(exception);
 		}
 
 		[Test]
@@ -74,15 +82,22 @@ namespace ArkSharp.Test.IO
 		{
 			var filePath = Path.GetTempFileName();
 			File.Delete(filePath);
+			Exception exception = null;
 
 			try
 			{
-				Assert.ThrowsAsync<FileNotFoundException>(async () => await FileHelper.ReadBytes(filePath));
+				await FileHelper.ReadBytes(filePath);
+			}
+			catch (Exception e)
+			{
+				exception = e;
 			}
 			finally
 			{
 				File.Delete(filePath);
 			}
+
+			Assert.IsInstanceOf<FileNotFoundException>(exception);
 		}
 	}
 }

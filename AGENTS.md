@@ -32,4 +32,6 @@
 - 使用 NUnit 和经典模式 `Assert` 语法
 - 测试类名、文件名以 `Test` 开头
 - 异步测试使用 `public async Task TestMethod()`
+- 异步异常测试应直接 `await`，以 `try`/`catch` 捕获异常，再用 `Assert.IsInstanceOf<T>` 验证类型。
+- 禁止使用 `Assert.ThrowsAsync`，避免其同步等待阻塞 Unity 主线程导致死锁。
 - 测试须独立、可重复，不修改业务代码迁就测试
