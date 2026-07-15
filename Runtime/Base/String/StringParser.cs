@@ -176,7 +176,7 @@ namespace ArkSharp
 			var len = end - start + 1;
 			if (len > 0)
 				return s.Slice(start, len);
-			
+
 			return ReadOnlySpan<char>.Empty;
 		}
 
