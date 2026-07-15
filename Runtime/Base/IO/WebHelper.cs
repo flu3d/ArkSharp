@@ -1,7 +1,6 @@
-#pragma warning disable SYSLIB0014
-
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Cysharp.Threading.Tasks;
@@ -9,87 +8,88 @@ using Cysharp.Threading.Tasks;
 #if UNITY_5_3_OR_NEWER
 using UnityEngine.Networking;
 #else
-using System.Net;
+using System.Net.Http;
 #endif
 
 namespace ArkSharp
 {
+	public readonly struct WebResult
+	{
+		public readonly byte[] Bytes;
+		public readonly string Error;
+
+		public bool IsSuccess => string.IsNullOrEmpty(Error);
+		public string Text => Bytes == null ? null : Encoding.UTF8.GetString(Bytes);
+
+		public WebResult(byte[] bytes, string error)
+		{
+			Bytes = bytes;
+			Error = error;
+		}
+	}
+
 	public static partial class WebHelper
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async UniTask<string> Get(string url)
 		{
-			var bytes = await FetchBytes(url, false, null);
-			return Encoding.UTF8.GetString(bytes);
+			return (await Fetch(url, false, null)).Text;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async UniTask<string> Post(string url, string postData = null)
 		{
-			var bytes = await FetchBytes(url, true, postData);
-			return Encoding.UTF8.GetString(bytes);
+			return (await Fetch(url, true, postData)).Text;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UniTask<byte[]> GetBytes(string url) => FetchBytes(url, false, null);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UniTask<byte[]> PostBytes(string url, string postData = null) => FetchBytes(url, true, postData);
-
 #if UNITY_5_3_OR_NEWER
-		public static async UniTask<byte[]> FetchBytes(string url, bool postMode, string postData = null)
+		public static async UniTask<WebResult> Fetch(string url, bool postMode, string postData = null)
 		{
-			using (var www = postMode ? UnityWebRequest.PostWwwForm(url, postData ?? "") : UnityWebRequest.Get(url))
+			try
 			{
-				var req = await www.SendWebRequest();
-				return req.downloadHandler.data;
+				using (var www = postMode ? UnityWebRequest.PostWwwForm(url, postData ?? "") : UnityWebRequest.Get(url))
+				{
+					await www.SendWebRequest();
+					if (www.result != UnityWebRequest.Result.Success)
+						return new WebResult(null, string.IsNullOrEmpty(www.error) ? $"Request failed: {www.result}." : www.error);
+
+					return new WebResult(www.downloadHandler.data, null);
+				}
+			}
+			catch (Exception e)
+			{
+				return new WebResult(null, e.Message);
 			}
 		}
 #else
-		public static UniTask<byte[]> FetchBytes(string url, bool postMode, string postData = null)
+		private static readonly HttpClient _httpClient = new(new SocketsHttpHandler {
+			AllowAutoRedirect = true,
+			UseCookies = false,
+			PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+		});
+
+		public static async UniTask<WebResult> Fetch(string url, bool postMode, string postData = null)
 		{
-			using (var www = new CustomWebClient { Encoding = Encoding.UTF8, Proxy = null })
+			try
 			{
-				var req = new UniTaskCompletionSource<byte[]>();
+				var uri = new Uri(url);
+				if (uri.IsFile)
+					return new WebResult(await File.ReadAllBytesAsync(uri.LocalPath), null);
 
-				if (postMode)
+				using (var request = postMode
+					? new HttpRequestMessage(HttpMethod.Post, uri) { Content = new StringContent(postData ?? "", Encoding.UTF8, "application/x-www-form-urlencoded") }
+					: new HttpRequestMessage(HttpMethod.Get, uri))
+				using (var response = await _httpClient.SendAsync(request))
 				{
-					www.UploadDataCompleted += (sender, e) => {
-						//req.SetProgress(1);
-						if (e.Error != null)
-							req.TrySetException(e.Error);
-						else
-							req.TrySetResult(e.Result);
-					};
-					//www.UploadProgressChanged += (sender, e) => req.SetProgress((float)e.ProgressPercentage / 100);
-					www.UploadDataAsync(new Uri(url), www.Encoding.GetBytes(postData ?? ""));
-				}
-				else
-				{
-					www.DownloadDataCompleted += (sender, e) => {
-						//req.SetProgress(1);
-						if (e.Error != null)
-							req.TrySetException(e.Error);
-						else
-							req.TrySetResult(e.Result);
-					};
-					//www.DownloadProgressChanged += (sender, e) => req.SetProgress((float)e.ProgressPercentage / 100);
-					www.DownloadDataAsync(new Uri(url));
-				}
+					if (!response.IsSuccessStatusCode)
+						return new WebResult(null, $"{(int)response.StatusCode} {response.ReasonPhrase}");
 
-				return req.Task;
+					return new WebResult(await response.Content.ReadAsByteArrayAsync(), null);
+				}
 			}
-		}
-
-		class CustomWebClient : WebClient
-		{
-			protected override WebRequest GetWebRequest(Uri address)
+			catch (Exception e)
 			{
-				var request = base.GetWebRequest(address);
-				if (request is HttpWebRequest httpRequest)
-					httpRequest.AllowAutoRedirect = true;
-
-				return request;
+				return new WebResult(null, e.Message);
 			}
 		}
 #endif

@@ -1,63 +1,66 @@
-using System;
 using System.Runtime.CompilerServices;
-using System.Text;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 
 namespace ArkSharp
 {
 	public static partial class WebHelper
 	{
-		public const int DefaultTryCount = 3;
-		public const int DefaultTryIntervalMs = 500;
-		public const int DefaultTryIntervalNextFrame = 0;
+		public const int DefaultMaxAttemptCount = 3;
+		public const int DefaultRetryIntervalMs = 500;
+		public const int DefaultRetryIntervalNextFrame = 0;
 
 		/// <summary>
-		/// 用GET方法多次重试执行web请求
+		/// 用 GET 方法执行可重试的 Web 请求
 		/// </summary>
-		/// <param name="tryCount">尝试次数，至少为1</param>
-		/// <param name="tryIntervalMS">重试等待间隔，0表示等待下一帧</param>
+		/// <param name="maxAttemptCount">最大尝试次数，至少为 1</param>
+		/// <param name="retryIntervalMs">重试等待间隔，0 表示等待下一帧</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UniTask<string> TryGet(string url, int tryCount = DefaultTryCount, int tryIntervalMS = DefaultTryIntervalMs)
-			=> TryFetch(url, false, null, tryCount, tryIntervalMS);
+		public static async UniTask<string> GetWithRetry(string url, int maxAttemptCount = DefaultMaxAttemptCount, int retryIntervalMs = DefaultRetryIntervalMs)
+			=> (await FetchWithRetry(url, false, null, maxAttemptCount, retryIntervalMs)).Text;
 
 		/// <summary>
-		/// 用POST方法多次重试执行web请求
+		/// 用 POST 方法执行可重试的 Web 请求
 		/// </summary>
-		/// <param name="tryCount">尝试次数，至少为1</param>
-		/// <param name="tryIntervalMS">重试等待间隔，0表示等待下一帧</param>
+		/// <param name="maxAttemptCount">最大尝试次数，至少为 1</param>
+		/// <param name="retryIntervalMs">重试等待间隔，0 表示等待下一帧</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UniTask<string> TryPost(string url, string postData = null, int tryCount = DefaultTryCount, int tryIntervalMS = DefaultTryIntervalMs)
-			=> TryFetch(url, true, postData, tryCount, tryIntervalMS);
+		public static async UniTask<string> PostWithRetry(string url, string postData = null, int maxAttemptCount = DefaultMaxAttemptCount, int retryIntervalMs = DefaultRetryIntervalMs)
+			=> (await FetchWithRetry(url, true, postData, maxAttemptCount, retryIntervalMs)).Text;
 
-		public static async UniTask<string> TryFetch(string url, bool postMode, string postData = null, int tryCount = DefaultTryCount, int tryIntervalMS = DefaultTryIntervalMs)
+		public static async UniTask<WebResult> FetchWithRetry(string url, bool postMode, string postData = null, int maxAttemptCount = DefaultMaxAttemptCount, int retryIntervalMs = DefaultRetryIntervalMs)
 		{
-			if (tryCount < 1)
-				tryCount = 1;
+			if (maxAttemptCount < 1)
+				maxAttemptCount = 1;
 
-			byte[] bytes = null;
+			WebResult result = default;
 
-			for (int i = 0; i < tryCount; i++)
+			for (int i = 0; i < maxAttemptCount; i++)
 			{
-				try
-				{
-					bytes = await FetchBytes(url, postMode, postData);
-					break;
-				}
-				catch (Exception)
-				{
-					// 如果是最后一次尝试，向外抛出异常
-					if (i + 1 >= tryCount)
-						throw;
-				}
+				result = await Fetch(url, postMode, postData);
+				if (result.IsSuccess || i + 1 >= maxAttemptCount)
+					return result;
 
 				// 重试间隔
-				if (tryIntervalMS > 0)
-					await UniTask.Delay(tryIntervalMS, true);
+				if (retryIntervalMs > 0)
+				{
+#if UNITY_5_3_OR_NEWER
+					await UniTask.Delay(retryIntervalMs, true);
+#else
+					await Task.Delay(retryIntervalMs);
+#endif
+				}
 				else
+				{
+#if UNITY_5_3_OR_NEWER
 					await UniTask.Yield();
+#else
+					await Task.Yield();
+#endif
+				}
 			}
 
-			return Encoding.UTF8.GetString(bytes);
+			return result;
 		}
 	}
 }

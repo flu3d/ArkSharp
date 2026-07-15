@@ -1,6 +1,4 @@
-using Cysharp.Threading.Tasks;
 using NUnit.Framework;
-using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,84 +13,71 @@ namespace ArkSharp.Test.IO
 		private const string _stringData01 = "Hello, Ark.\n你好，方舟。\nこんにちは、アーク。";
 
 		[Test]
-		public async Task TestLoadText()
+		public async Task TestReadText()
 		{
 			var filePath = Path.GetTempFileName();
 			var fileContent = _stringData01;
-			File.WriteAllText(filePath, fileContent);
 
-			var req = FileHelper.Get(filePath);
-			var result = await req;
-
-			//Assert.AreEqual(UniTaskStatus.Succeeded, req.Status);
-			Assert.AreEqual(fileContent, result);
+			try
+			{
+				File.WriteAllText(filePath, fileContent);
+				var result = await FileHelper.ReadText(filePath);
+				Assert.AreEqual(fileContent, result);
+			}
+			finally
+			{
+				File.Delete(filePath);
+			}
 		}
 
 		[Test]
-		public async Task TestLoadTextNotFound()
+		public async Task TestReadTextNotFound()
 		{
 			var filePath = Path.GetTempFileName();
 			File.Delete(filePath);
 
-			Exception error = null;
-			string result = null;
-			var req = new UniTask<string>();
-
 			try
 			{
-				req = FileHelper.Get(filePath);
-				result = await req;
+				Assert.ThrowsAsync<FileNotFoundException>(async () => await FileHelper.ReadText(filePath));
 			}
-			catch (Exception e)
+			finally
 			{
-				error = e;
+				File.Delete(filePath);
 			}
-
-			//Assert.AreEqual(UniTaskStatus.Faulted, req.Status);
-			Assert.NotNull(error);
-			Assert.IsNull(result);
 		}
 
 		[Test]
-		public async Task TestLoadBytes()
+		public async Task TestReadBytes()
 		{
 			var filePath = Path.GetTempFileName();
 			var fileContent = Encoding.UTF8.GetBytes(_stringData01);
-			File.WriteAllBytes(filePath, fileContent);
 
-			var req = FileHelper.GetBytes(filePath);
-			var result = await req;
-
-			//Assert.AreEqual(UniTaskStatus.Succeeded, req.Status);
-			Assert.AreEqual(fileContent.Length, result.Length);
-
-			for (int i = 0; i < fileContent.Length; i++)
-				Assert.AreEqual(fileContent[i], result[i]);
+			try
+			{
+				File.WriteAllBytes(filePath, fileContent);
+				var result = await FileHelper.ReadBytes(filePath);
+				CollectionAssert.AreEqual(fileContent, result);
+			}
+			finally
+			{
+				File.Delete(filePath);
+			}
 		}
 
 		[Test]
-		public async Task TestLoadBytesNotFound()
+		public async Task TestReadBytesNotFound()
 		{
 			var filePath = Path.GetTempFileName();
 			File.Delete(filePath);
 
-			Exception error = null;
-			byte[] result = null;
-			var req = new UniTask<byte[]>();
-
 			try
 			{
-				req = FileHelper.GetBytes(filePath);
-				result = await req;
+				Assert.ThrowsAsync<FileNotFoundException>(async () => await FileHelper.ReadBytes(filePath));
 			}
-			catch (Exception e)
+			finally
 			{
-				error = e;
+				File.Delete(filePath);
 			}
-
-			//Assert.AreEqual(UniTaskStatus.Faulted, req.Status);
-			Assert.NotNull(error);
-			Assert.IsNull(result);
 		}
 	}
 }

@@ -1,8 +1,7 @@
-using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
@@ -15,76 +14,93 @@ namespace ArkSharp.Test.IO
 		private const string _stringData01 = "Hello, Ark.\n你好，方舟。\nこんにちは、アーク。";
 
 		[Test]
-		public async Task TestGetLocal()
+		public async Task TestFetchLocal()
 		{
 			var filePath = Path.GetTempFileName();
 			var fileContent = Encoding.UTF8.GetBytes(_stringData01);
-			File.WriteAllBytes(filePath, fileContent);
 
-			var url = PathHelper.Path2URL(filePath);
-			var req = WebHelper.GetBytes(url);
-			var result = await req;
+			try
+			{
+				File.WriteAllBytes(filePath, fileContent);
 
-			//Assert.AreEqual(UniTaskStatus.Succeeded, req.Status);
-			Assert.AreEqual(fileContent.Length, result.Length);
+				var url = PathHelper.Path2URL(filePath);
+				var result = await WebHelper.Fetch(url, false);
 
-			for (int i = 0; i < fileContent.Length; i++)
-				Assert.AreEqual(fileContent[i], result[i]);
+				Assert.True(result.IsSuccess);
+				Assert.IsNull(result.Error);
+				Assert.AreEqual(_stringData01, result.Text);
+				CollectionAssert.AreEqual(fileContent, result.Bytes);
+			}
+			finally
+			{
+				File.Delete(filePath);
+			}
 		}
 
 		[Test]
-		public async Task TestGetLocalNotFound()
+		public async Task TestFetchLocalNotFound()
 		{
 			var filePath = Path.GetTempFileName();
 			File.Delete(filePath);
 
-			Exception error = null;
-			byte[] result = null;
-			var req = new UniTask<byte[]>();
-
 			try
 			{
 				var url = PathHelper.Path2URL(filePath);
-				req = WebHelper.GetBytes(url);
-				result = await req;
-			}
-			catch (Exception e)
-			{
-				error = e;
-			}
+				var result = await WebHelper.Fetch(url, false);
 
-			//Assert.AreEqual(UniTaskStatus.Faulted, req.Status);
-			Assert.NotNull(error);
-			Assert.IsNull(result);
+				Assert.False(result.IsSuccess);
+				Assert.NotEmpty(result.Error);
+				Assert.IsNull(result.Bytes);
+				Assert.IsNull(result.Text);
+			}
+			finally
+			{
+				File.Delete(filePath);
+			}
 		}
 
 		[Test]
-		public async Task TestGetLocalNotFoundWithRetry()
+		public async Task TestFetchWithRetryLocalNotFound()
 		{
 			var filePath = Path.GetTempFileName();
 			File.Delete(filePath);
 
-			Exception error = null;
-			string result = null;
-			var req = new UniTask<string>();
+			try
+			{
+				const int MAX_ATTEMPT_COUNT = 3;
+				const int RETRY_INTERVAL_MS = 50;
+				var stopwatch = Stopwatch.StartNew();
+				var url = PathHelper.Path2URL(filePath);
+				var result = await WebHelper.FetchWithRetry(url, false, null, MAX_ATTEMPT_COUNT, RETRY_INTERVAL_MS);
 
-			var time = RealTime.unixTimeMS;
+				Assert.GreaterOrEqual(stopwatch.ElapsedMilliseconds, (MAX_ATTEMPT_COUNT - 1) * RETRY_INTERVAL_MS);
+				Assert.False(result.IsSuccess);
+				Assert.NotEmpty(result.Error);
+				Assert.IsNull(result.Text);
+			}
+			finally
+			{
+				File.Delete(filePath);
+			}
+		}
+
+		[Test]
+		public async Task TestGetWithRetryLocalNotFound()
+		{
+			var filePath = Path.GetTempFileName();
+			File.Delete(filePath);
 
 			try
 			{
 				var url = PathHelper.Path2URL(filePath);
-				req = WebHelper.TryGet(url, 3, 200);
-				result = await req;
-			}
-			catch (Exception e)
-			{
-				error = e;
-			}
+				var result = await WebHelper.GetWithRetry(url, 1, 0);
 
-			//Assert.AreEqual(UniTaskStatus.Faulted, req.Status);
-			Assert.GreaterOrEqual(RealTime.unixTimeMS - time, 2 * 200); // 尝试3次都失败，中间经历2次延迟
-			Assert.NotNull(error);
-			Assert.IsNull(result);
+				Assert.IsNull(result);
+			}
+			finally
+			{
+				File.Delete(filePath);
+			}
 		}
 	}
 }

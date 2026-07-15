@@ -11,21 +11,21 @@ namespace ArkSharp
 	public static class FileHelper
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static async UniTask<string> Get(string path)
+		public static async UniTask<string> ReadText(string path)
 		{
-			var bytes = await GetBytes(path);
+			var bytes = await ReadBytes(path);
 			return Encoding.UTF8.GetString(bytes);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UniTask<byte[]> GetBytes(string path)
+		public static async UniTask<byte[]> ReadBytes(string path)
 		{
-			// 如果是从jar或其他url读取则还是走web加载
-			if (PathHelper.IsURL(path))
-				return WebHelper.GetBytes(path);
-
-			// 使用后台线程池加载文件
-			return UniTask.RunOnThreadPool(() => File.ReadAllBytes(path));
+			// Unity 版本使用 UniTask 的线程池封装；.NET 版本不包含该 API。
+#if UNITY_5_3_OR_NEWER
+			return await UniTask.RunOnThreadPool(() => File.ReadAllBytes(path));
+#else
+			return await File.ReadAllBytesAsync(path);
+#endif
 		}
 	}
 }
