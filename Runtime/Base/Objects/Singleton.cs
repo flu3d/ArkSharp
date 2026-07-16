@@ -24,18 +24,7 @@ namespace ArkSharp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static object Get(Type type, Func<Type, object> createFunc = null)
 		{
-			var factory = (createFunc == null)
-				? _createInstanceFunc
-				: type => {
-					var instance = createFunc(type);
-#if UNITY_5_3_OR_NEWER
-					if (autoSetDontDestroyOnLoad /*&& Application.isPlaying*/ && instance is MonoBehaviour behaviour)
-						GameObject.DontDestroyOnLoad(behaviour.gameObject);
-#endif
-					return instance;
-				};
-
-			return _cache.GetOrAdd(type, factory);
+			return GetOrCreate(type, createFunc);
 		}
 
 		/// <summary>
@@ -60,8 +49,8 @@ namespace ArkSharp
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public static T Get(Func<Type, object> createFunc)
 			{
-				if (_instance == null)
-					_instance = (T)_cache.GetOrAdd(typeof(T), createFunc ?? _createInstanceFunc);
+				if (IsNullOrDestroyed(_instance))
+					_instance = (T)GetOrCreate(typeof(T), createFunc);
 
 				return _instance;
 			}
@@ -75,34 +64,76 @@ namespace ArkSharp
 		}
 
 
-		private static readonly Func<Type, object> _createInstanceFunc = CreateInstance;
+		private static readonly Func<Type, object> _createInstanceFunc = type => CreateInstance(type, null);
 		private static readonly Action<Type, object> _destroyInstanceFunc = DestroyInstance;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static object CreateInstance(Type type)
+		private static object GetOrCreate(Type type, Func<Type, object> createFunc)
 		{
+			var factory = _createInstanceFunc;
+			if (createFunc != null)
+				factory = requestedType => CreateInstance(requestedType, createFunc);
+
+			var instance = _cache.GetOrAdd(type, factory);
+
+			if (IsNullOrDestroyed(instance))
+			{
+				_cache.Remove(type);
+				instance = _cache.GetOrAdd(type, factory);
+			}
+
+			return instance;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool IsNullOrDestroyed(object instance)
+		{
+			if (instance == null)
+				return true;
+
 #if UNITY_5_3_OR_NEWER
-			if (typeof(MonoBehaviour).IsAssignableFrom(type))
-			{
-				var behaviour = GameObject.FindObjectOfType(type);
-                if (behaviour == null && !_isAppQuitting)
-				{
-					var gameObj = new GameObject(type.Name);
-					behaviour = gameObj.AddComponent(type);
-
-					if (autoSetDontDestroyOnLoad && Application.isPlaying)
-						GameObject.DontDestroyOnLoad(gameObj);
-				}
-
-				return behaviour;
-			}
-			/*
-			if (typeof(ScriptableObject).IsAssignableFrom(type))
-			{
-			}
-			*/
+			return instance is UnityEngine.Object unityObject && !unityObject;
+#else
+			return false;
 #endif
-			return Activator.CreateInstance(type, true);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static object CreateInstance(Type type, Func<Type, object> createFunc)
+		{
+			object instance;
+			if (createFunc != null)
+			{
+				// 使用传入的工厂函数创建实例
+				instance = createFunc(type);
+			}
+
+#if UNITY_5_3_OR_NEWER
+			else if (typeof(MonoBehaviour).IsAssignableFrom(type))
+			{
+				// Unity 环境下使用 FindObjectOfType 查找已存在的实例，不存在则创建新的实例
+				var behaviour = GameObject.FindObjectOfType(type);
+				if (behaviour == null && !_isAppQuitting)
+					behaviour = new GameObject(type.Name).AddComponent(type);
+
+				instance = behaviour;
+			}
+#endif
+			else
+			{
+				// 非 Unity 环境下使用反射创建实例
+				instance = Activator.CreateInstance(type, true);
+			}
+
+#if UNITY_5_3_OR_NEWER
+			if (autoSetDontDestroyOnLoad && !_isAppQuitting && Application.isPlaying)
+			{
+				if (instance is MonoBehaviour behaviour && behaviour)
+					GameObject.DontDestroyOnLoad(behaviour.gameObject);
+			}
+#endif
+
+			return instance;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -145,15 +145,27 @@ namespace ArkSharp
 			return result;
 		}
 
+		/// <summary>
+		/// 清除调用开始时缓存中的所有条目。
+		/// disposer 在锁外执行；执行期间新写入的条目视为后续操作，不属于本次清理范围。
+		/// disposer 异常不会阻止其他条目清理，完成后会统一抛出。
+		/// </summary>
 		public void Clear(Action<TKey, TValue> disposer = null)
 		{
+			KeyValuePair<TKey, TValue>[] entries = null;
+
 			_lock.EnterWriteLock();
 			try
 			{
+				if (_dict.Count == 0)
+					return;
+
 				if (disposer != null)
 				{
-					foreach (var kv in _dict)
-						disposer.Invoke(kv.Key, kv.Value);
+					entries = new KeyValuePair<TKey, TValue>[_dict.Count];
+					int index = 0;
+					foreach (var entry in _dict)
+						entries[index++] = entry;
 				}
 
 				_dict.Clear();
@@ -162,6 +174,27 @@ namespace ArkSharp
 			{
 				_lock.ExitWriteLock();
 			}
+
+			if (entries == null)
+				return;
+
+			List<Exception> exceptions = null;
+			for (int i = 0; i < entries.Length; i++)
+			{
+				try
+				{
+					var entry = entries[i];
+					disposer.Invoke(entry.Key, entry.Value);
+				}
+				catch (Exception e)
+				{
+					exceptions ??= new List<Exception>();
+					exceptions.Add(e);
+				}
+			}
+
+			if (exceptions != null)
+				throw new AggregateException(exceptions);
 		}
 
         public void Dispose()
