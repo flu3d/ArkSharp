@@ -151,6 +151,23 @@ namespace ArkSharp
 		}
 
 		/// <summary>
+		/// 获取枚举值的显示名称，优先使用InspectorName别名
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string GetDisplayName<T>(this T value) where T : Enum
+		{
+			var members = GetMembers(typeof(T));
+			for (int i = 0; i < members.Count; i++)
+			{
+				var member = members[i];
+				if (EqualityComparer<T>.Default.Equals((T)member.value, value))
+					return member.alias ?? member.name;
+			}
+
+			return value.ToString();
+		}
+
+		/// <summary>
 		/// 缓存枚举成员信息：名字、数值、别名
 		/// </summary>
 		public class EnumMember

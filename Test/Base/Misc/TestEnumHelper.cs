@@ -200,6 +200,18 @@ namespace ArkSharp.Test.Misc
             Assert.AreSame(members1, members2);
         }
 
+        [Test]
+        public void GetDisplayName_WithDefinedValue_ShouldReturnEnumName()
+        {
+            Assert.AreEqual("First", TestEnum.First.GetDisplayName());
+        }
+
+        [Test]
+        public void GetDisplayName_WithUndefinedValue_ShouldReturnValueText()
+        {
+            Assert.AreEqual("99", ((TestEnum)99).GetDisplayName());
+        }
+
 #if UNITY_5_3_OR_NEWER
         [Test]
         public void To_WithAlias_ShouldUseAlias()
@@ -232,6 +244,12 @@ namespace ArkSharp.Test.Misc
             Assert.AreEqual("Item1", item1Member.name);
             Assert.AreEqual("别名1", item1Member.alias);
             Assert.AreEqual(TestEnumWithAlias.Item1, item1Member.value);
+        }
+
+        [Test]
+        public void GetDisplayName_WithAlias_ShouldReturnAlias()
+        {
+            Assert.AreEqual("别名1", TestEnumWithAlias.Item1.GetDisplayName());
         }
 #endif
 
