@@ -34,10 +34,10 @@ namespace ArkSharp
         }
 
         /// <summary>
-        /// 获取成员类型，支持属性和字段
+        /// 获取成员值类型，支持属性和字段
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Type GetPropertyOrFieldType(this MemberInfo member)
+        public static Type GetValueType(this MemberInfo member)
         {
             switch (member.MemberType)
             {

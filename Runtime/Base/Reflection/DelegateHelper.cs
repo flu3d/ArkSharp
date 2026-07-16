@@ -44,5 +44,17 @@ namespace ArkSharp
         {
             return Delegate.CreateDelegate(typeof(T), target, method, false) as T;
         }
+
+        /// <summary>
+        /// 获取委托类型的 Invoke 方法
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static MethodInfo GetInvokeMethod(this Type delegateType)
+        {
+            if (delegateType == null || !delegateType.IsSubclassOf(typeof(MulticastDelegate)))
+                return null;
+
+            return delegateType.GetMethod("Invoke", BindingFlags.Instance | BindingFlags.Public);
+        }
     }
 }

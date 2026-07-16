@@ -26,7 +26,8 @@ namespace ArkSharp
 		};
 
         /// <summary>
-		/// 跨程序集查找指定类型，如果名字包含`.`则匹配FullName，否则查找Name
+		/// 跨程序集查找指定类型。优先精确匹配 FullName，找不到时按命名空间边界匹配后缀。
+		/// 当多个类型匹配时，按 <see cref="GetAllUserTypes()"/> 的枚举顺序返回首次匹配结果。
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type FindUserType(string typeNameOrFullName, bool ignoreCase = false)
@@ -34,12 +35,30 @@ namespace ArkSharp
 			if (string.IsNullOrEmpty(typeNameOrFullName))
 				return null;
 
-			if (typeNameOrFullName.Contains('.'))
-				return GetAllUserTypes().FirstOrDefault(t =>
-					string.Compare(t.FullName, typeNameOrFullName, ignoreCase) == 0);
-			else
-				return GetAllUserTypes().FirstOrDefault(t =>
-					string.Compare(t.Name, typeNameOrFullName, ignoreCase) == 0);
+			var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+			foreach (var type in GetAllUserTypes())
+			{
+				if (string.Equals(type.FullName, typeNameOrFullName, comparison))
+					return type;
+			}
+
+			foreach (var type in GetAllUserTypes())
+			{
+				if (IsQualifiedNameSuffix(type.FullName, typeNameOrFullName, comparison))
+					return type;
+			}
+
+			return null;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool IsQualifiedNameSuffix(string fullName, string suffix, StringComparison comparison)
+		{
+			if (string.IsNullOrEmpty(fullName) || !fullName.EndsWith(suffix, comparison))
+				return false;
+
+			int prefixLength = fullName.Length - suffix.Length;
+			return prefixLength == 0 || fullName[prefixLength - 1] == '.';
 		}
 
 		/// <summary>

@@ -32,7 +32,7 @@ namespace ArkSharp
 				return null;
 
 			var arguments = type.GetGenericArguments();
-			if (arguments == null || arguments.Length <= 0 || index >= arguments.Length)
+			if (index < 0 || index >= arguments.Length)
 				return null;
 
 			return arguments[index];
@@ -139,6 +139,45 @@ namespace ArkSharp
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// 枚举类型字段
+		/// </summary>
+		public static IEnumerable<FieldInfo> EnumerateFields(this Type objType, BindingFlags flags, bool inherit = false, Func<FieldInfo, bool> predicate = null)
+		{
+			Func<MemberInfo, bool> memberPredicate = null;
+			if (predicate != null)
+				memberPredicate = member => predicate((FieldInfo)member);
+
+			foreach (var member in EnumerateMembers(objType, MemberTypes.Field, flags, inherit, memberPredicate))
+				yield return (FieldInfo)member;
+		}
+
+		/// <summary>
+		/// 枚举类型属性
+		/// </summary>
+		public static IEnumerable<PropertyInfo> EnumerateProperties(this Type objType, BindingFlags flags, bool inherit = false, Func<PropertyInfo, bool> predicate = null)
+		{
+			Func<MemberInfo, bool> memberPredicate = null;
+			if (predicate != null)
+				memberPredicate = member => predicate((PropertyInfo)member);
+
+			foreach (var member in EnumerateMembers(objType, MemberTypes.Property, flags, inherit, memberPredicate))
+				yield return (PropertyInfo)member;
+		}
+
+		/// <summary>
+		/// 枚举类型方法
+		/// </summary>
+		public static IEnumerable<MethodInfo> EnumerateMethods(this Type objType, BindingFlags flags, bool inherit = false, Func<MethodInfo, bool> predicate = null)
+		{
+			Func<MemberInfo, bool> memberPredicate = null;
+			if (predicate != null)
+				memberPredicate = member => predicate((MethodInfo)member);
+
+			foreach (var member in EnumerateMembers(objType, MemberTypes.Method, flags, inherit, memberPredicate))
+				yield return (MethodInfo)member;
 		}
 
 		/// <summary>
