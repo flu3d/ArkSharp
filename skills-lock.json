@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "grill-it": {
+      "source": "rocwood/indie-skills",
+      "sourceType": "github",
+      "skillPath": "skills/grill-it/SKILL.md",
+      "computedHash": "74e19f4a58eab4aa2fa66535f2be9f3b6cdf3431186aa9956ad913238300ef0f"
+    },
+    "handoff": {
+      "source": "rocwood/indie-skills",
+      "sourceType": "github",
+      "skillPath": "skills/handoff/SKILL.md",
+      "computedHash": "22ce193d2c9cdaf835815466cc2654541d618c01c7eb178081082425362f60b7"
+    }
+  }
+}

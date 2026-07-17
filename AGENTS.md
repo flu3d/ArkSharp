@@ -1,6 +1,6 @@
 # 开发指南
 
-遵循通用开发规范 [DEV-GUIDE.md](DEV-GUIDE.md)。
+遵循通用开发规范 [docs/DEV-GUIDE.md](docs/DEV-GUIDE.md)。
 本文补充本项目的特定约束，冲突时以本文为准。
 
 ## 核心要求

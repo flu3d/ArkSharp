@@ -1,5 +1,6 @@
-.idea/
+.temp/
 
+.idea/
 .vscode/
 .history
 
@@ -398,4 +399,16 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # Others
-.temp/
+/docs/plans/
+/docs/plans.meta
+
+# Local configuration and secrets
+.codex/config.toml
+.mcp.json
+mcp.json
+*.local.json
+*.local.md
+.env
+.env.*
+!.env.example
+!.env.*.example
